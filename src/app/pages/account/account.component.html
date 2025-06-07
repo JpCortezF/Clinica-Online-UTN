@@ -1,0 +1,13 @@
+<div class="min-h-screen flex gap-10 flex-col md:flex-row justify-center items-center p-4">
+  <a [routerLink]="['/register', 'patient']" class="flex flex-col items-center cursor-pointer p-2">
+    <img src="paciente-atendido.jpeg" alt="Paciente"
+         class="w-60 h-60 object-cover rounded-full shadow border-2 hover:border-blue-500 border-transparent" />
+    <span class="mt-2 text-center text-lg font-semibold">Paciente</span>
+  </a>
+  
+  <a [routerLink]="['/register', 'specialist']" class="flex flex-col items-center cursor-pointer p-2">
+    <img src="especialista_devolucion.jpeg" alt="Especialista"
+         class="w-60 h-60 object-cover rounded-full shadow border-2 hover:border-green-500 border-transparent" />
+    <span class="mt-2 text-center text-lg font-semibold">Especialista</span>
+  </a>
+</div>

@@ -1,0 +1,86 @@
+<div class="min-h-screen flex items-center justify-center bg-white">
+  <form [formGroup]="form_register" (ngSubmit)="onSubmit()" class="w-full max-w-md p-6 bg-gray-50 border-gray-50 drop-shadow- shadow-md rounded space-y-4" *ngIf="userType">
+
+    <!-- Campos comunes -->
+    <input class="input" type="text" formControlName="first_name" placeholder="Nombre" />
+    <div *ngIf="invalid('first_name')">El nombre es requerido y solo puede contener letras.</div>
+
+    <input class="input" type="text" formControlName="last_name" placeholder="Apellido" />
+    <div *ngIf="invalid('last_name')">El apellido es requerido y solo puede contener letras.</div>
+
+    <input class="input" type="number" formControlName="age" placeholder="Edad" />
+    <div *ngIf="invalid('age')">Edad mínima: 14 años.</div>
+
+    <input class="input" type="text" formControlName="dni" placeholder="DNI" />
+    <div *ngIf="invalid('dni')">El DNI debe tener al menos 8 caracteres.</div>
+
+    <input class="input" type="email" formControlName="email" placeholder="Email" />
+    <div *ngIf="invalid('email')">El email no es válido.</div>
+
+    <input class="input" type="password" formControlName="password" placeholder="Contraseña" />
+    <div *ngIf="invalid('password')">Mínimo 6 caracteres.</div>
+    
+    <div class="mb-4">
+      <label class="block font-medium mb-1">Imagen de perfil</label>
+      <div class="flex items-center gap-2">
+        <input type="text" [value]="profileImageFile?.name || 'Ningún archivo seleccionado'" readonly
+          class="flex-1 input bg-gray-100 text-gray-500"/>
+        <button type="button" (click)="triggerFileInput('profile')" class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+          Seleccionar archivo
+        </button>
+      </div>
+      <div *ngIf="submitted && !profileImageFile" class="text-red-500 text-sm mt-1">Campo requerido.</div>
+    </div>
+
+    <ng-container *ngIf="userType === 'patient'">
+      <div class="mb-4">
+        <label class="block font-medium mb-1">Segunda imagen de perfil</label>
+        <div class="flex items-center gap-2">
+          <input type="text"
+            [value]="secondProfileImageFile?.name || 'Ningún archivo seleccionado'" readonly
+            class="flex-1 input bg-gray-100 text-gray-500"/>
+          <button type="button" (click)="triggerFileInput('second')" class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+            Seleccionar archivo
+          </button>
+        </div>
+        <div *ngIf="submitted && !secondProfileImageFile" class="text-red-500 text-sm mt-1">Campo requerido.</div>
+      </div>
+      <input class="input" type="text" formControlName="health_medical" placeholder="Obra social" />
+      <div *ngIf="invalid('health_medical')">Campo requerido.</div>
+    </ng-container>
+
+    <!-- Inputs ocultos -->
+    <input type="file" hidden #fileInputProfile (change)="handleImageUpload($event, 'profile')" accept="image/*" />
+    <input type="file" hidden #fileInputSecond (change)="handleImageUpload($event, 'second')" accept="image/*" />
+
+    <!-- Especialista -->
+    <ng-container *ngIf="userType === 'specialist'">
+      <div>
+        <label class="block font-medium mb-1">Especialidades</label>
+
+        <!-- Select -->
+        <div class="flex gap-2 mb-2">
+          <select [(ngModel)]="selectedSpecialty" name="selectedSpecialty" class="input flex-1">
+            <option *ngFor="let spec of allSpecialties" [value]="spec.name">{{ spec.name }}</option>
+          </select>
+          <button type="button" (click)="addSpecialtyFromSelect()" class="btn">Agregar</button>
+        </div>
+
+        <!-- Agregar nueva -->
+        <div class="flex gap-2 mb-2">
+          <input [(ngModel)]="newSpecialty" name="newSpecialty" class="input flex-1" placeholder="Nueva especialidad" />
+          <button type="button" (click)="addSpecialty()" class="btn">Agregar</button>
+        </div>
+
+        <!-- Lista actual -->
+        <div class="flex gap-2 flex-wrap">
+          <span *ngFor="let sp of specialties.controls; let i = index" class="bg-blue-100 px-2 py-1 rounded flex items-center">
+            {{ sp.value }}
+            <button (click)="removeSpecialty(i)" class="text-red-500 ml-2 font-bold">✖</button>
+          </span>
+        </div>
+      </div>
+    </ng-container>
+    <button class="bg-blue-900 hover:bg-blue-800 px-4 py-2 text-white rounded w-full" type="submit">Registrar</button>
+  </form>
+</div>

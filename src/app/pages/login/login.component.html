@@ -1,0 +1,31 @@
+<div class="min-h-screen flex items-center justify-center bg-white px-4">
+  <form [formGroup]="form_login" (ngSubmit)="onSubmit()"
+        class="w-full max-w-md p-6 bg-gray-50 border border-gray-200 drop-shadow-2xl shadow-md rounded space-y-5 text-center">
+    
+    <h2 class="text-2xl font-semibold text-blue-900 mb-4">Iniciar sesión</h2>
+
+    <div>
+      <input type="email" formControlName="email" placeholder="Email"
+             class="w-full p-2 rounded bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-800" />
+      <div *ngIf="invalid('email')" class="text-red-800 text-sm mt-1">Email inválido.</div>
+    </div>
+
+    <div>
+      <input type="password" formControlName="password" placeholder="Contraseña"
+             class="w-full p-2 rounded bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-800" />
+      <div *ngIf="invalid('password')" class="text-red-800 text-sm mt-1">Mínimo 6 caracteres.</div>
+    </div>
+
+    <div *ngIf="loginError" class="text-red-800 text-sm">{{ loginError }}</div>
+
+    <button type="submit"
+            class="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2 rounded">
+      Iniciar sesión
+    </button>
+
+    <p class="mt-4 text-sm text-gray-700">
+      ¿Primera vez que ingresás?
+      <a routerLink="/account" class="text-blue-800 font-medium hover:underline cursor-pointer">Registrate acá</a>
+    </p>
+  </form>
+</div>
