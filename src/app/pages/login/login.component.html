@@ -4,6 +4,26 @@
     
     <h2 class="text-2xl font-semibold text-blue-900 mb-4">Iniciar sesión</h2>
 
+    <div class="flex justify-center gap-3 pb-2">
+        <!-- AD -->
+        <button (click)="quickLogin('admin@gmail.com', 'bushin')" 
+                class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center hover:bg-gray-500 transition-colors">
+          <span class="text-sm font-medium text-white">AD</span>
+        </button>
+
+        <!-- ME -->
+        <button (click)="quickLogin('jpbushin@gmail.com', '123456')" 
+                class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center hover:bg-gray-500 transition-colors">
+          <span class="text-sm font-medium text-white">ME</span>
+        </button>
+      
+        <!-- PA -->
+        <button (click)="quickLogin('melo@gmail.com', '123456')" 
+                class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center hover:bg-gray-500 transition-colors">
+          <span class="text-sm font-medium text-white">PA</span>
+        </button>
+      </div>
+
     <div>
       <input type="email" formControlName="email" placeholder="Email"
              class="w-full p-2 rounded bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-800" />

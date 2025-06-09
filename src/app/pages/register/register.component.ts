@@ -1,10 +1,12 @@
-import { Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { CommonModule } from '@angular/common';
 import { Patient, Specialist } from '../../classes/user';
 import { SupabaseService } from '../../services/supabase.service';
-import { ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -15,13 +17,15 @@ import { ActivatedRoute } from '@angular/router';
 export class RegisterComponent {
   db = inject(DatabaseService);
   sb = inject(SupabaseService);
-  userType: 'patient' | 'specialist' | null = null; 
+  auth = inject(AuthService);
+  router = inject(Router);
+  userType!: 'patient' | 'specialist';
   form_register!: FormGroup;
   profileImageFile: File | null = null;
   secondProfileImageFile: File | null = null;
-
+  
   newSpecialty = '';
-  allSpecialties: { id: number; name: string }[] = [];
+  allSpecialties: string[] = [];
   selectedSpecialty = '';
 
   submitted = false;
@@ -30,17 +34,19 @@ export class RegisterComponent {
 
   constructor(private fb: FormBuilder, private route: ActivatedRoute) {}
 
-  ngOnInit() {
-    const type = this.route.snapshot.paramMap.get('type');
+  ngOnInit(): void {
+  this.route.paramMap.subscribe(params => {
+    const type = params.get('type');
     if (type === 'patient' || type === 'specialist') {
       this.userType = type;
       this.loadSpecialties();
+      this.initForm();
     }
-  }
+  });
+}
 
   async loadSpecialties() {
-    // const { data, error } = await this.sb.supabase.from('specialties').select();
-    // if (!error) this.allSpecialties = data;
+    this.allSpecialties = await this.db.getSpecialties();
   }
 
   addSpecialtyFromSelect() {
@@ -84,17 +90,18 @@ export class RegisterComponent {
 
   addSpecialty() {
   const trimmed = this.newSpecialty.trim();
-  if (trimmed) {
-    this.specialties.push(new FormControl<string>(trimmed, { nonNullable: true, validators: [Validators.required] }));
-    this.newSpecialty = '';
+    if (trimmed) {
+      this.specialties.push(new FormControl<string>(trimmed, { nonNullable: true, validators: [Validators.required] }));
+      this.newSpecialty = '';
+    }
   }
-}
 
   removeSpecialty(index: number) {
     this.specialties.removeAt(index);
   }
 
   invalid(controlName: string): boolean {
+    if (!this.form_register) return false;
     const control = this.form_register.get(controlName);
     return !!(control && control.invalid && control.touched);
   }
@@ -146,7 +153,9 @@ export class RegisterComponent {
 
       const auth_id = session.data.session?.user?.id;
       if (auth_id) {
-        await this.db.updateImages(auth_id, profileUrl);
+        await this.db.updateImages(auth_id, profileUrl, secondUrl);
+        const updatedUser = await this.auth.getLoggedUserData();
+        this.auth.setCurrentUser(updatedUser);
       }
     } else {
       const specialist = new Specialist(
@@ -167,14 +176,20 @@ export class RegisterComponent {
       const auth_id = session.data.session?.user?.id;
       if (auth_id) {
         await this.db.updateImages(auth_id, profileUrl);
+        const updatedUser = await this.auth.getLoggedUserData();
+        this.auth.setCurrentUser(updatedUser);
       }
     }
 
-    console.log('¡Registro exitoso!');
     this.form_register.reset();
     this.submitted = false;
     this.profileImageFile = null;
     this.secondProfileImageFile = null;
-    this.userType = null;
+
+    this.auth.currentUser$.pipe(take(1)).subscribe(user => {
+      if (user) {
+        this.router.navigate(['/']);
+      }
+    });
   }
 }

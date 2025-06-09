@@ -1,0 +1,39 @@
+<div class="flex justify-center">
+  <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="space-y-4 md:w-[50%] w-[90%]">
+    <div>
+      <label class="block text-gray-700 font-semibold mb-1">Seleccione especialidad</label>
+      <select class="input w-full" formControlName="specialty">
+        <option value="" disabled selected>-- Elija una especialidad --</option>
+        <option *ngFor="let spec of specialties" [value]="spec">{{ spec }}</option>
+      </select>
+    </div>
+  
+    <div *ngIf="specialists.length > 0">
+      <label class="block text-gray-700 font-semibold mb-1">Seleccione un profesional</label>
+      <select class="input w-full" formControlName="specialistId">
+        <option value="" disabled selected>-- Elija un especialista --</option>
+        <option *ngFor="let sp of specialists" [value]="sp.id">
+          {{ sp.user.first_name }} {{ sp.user.last_name }}
+        </option>
+      </select>
+    </div>
+  
+    <div *ngIf="availableDates.length > 0">
+      <label class="block text-gray-700 font-semibold mb-1">Seleccione un día disponible</label>
+      <select class="input w-full" formControlName="date">
+        <option *ngFor="let d of availableDates" [value]="d">{{ d }}</option>
+      </select>
+    </div>
+  
+    <div *ngIf="availableTimes.length > 0">
+      <label class="block text-gray-700 font-semibold mb-1">Seleccione un horario</label>
+      <select class="input w-full" formControlName="time">
+        <option *ngFor="let t of availableTimes" [value]="t">{{ t }}</option>
+      </select>
+    </div>
+  
+    <button class="bg-blue-800 hover:bg-blue-700 text-white py-2 px-4 rounded mt-4 w-full" type="submit">
+      Solicitar turno
+    </button>
+  </form>
+</div>

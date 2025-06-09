@@ -1,0 +1,24 @@
+<div class="min-h-screen bg-gradient-to-b from-blue-900 to-blue-500 flex justify-center pt-20">
+  <div class="bg-blue-300 p-6 rounded-lg shadow-md w-full max-w-5xl">
+    <h1 class="text-4xl font-bold text-center text-white mb-6">Mis Turnos</h1>
+
+    <div class="flex justify-center mb-6 space-x-4">
+      <button (click)="viewMode = 'form'" class="px-4 py-2 rounded shadow text-blue-900 font-semibold"
+              [ngClass]="viewMode === 'form' ? 'bg-blue-400' : 'bg-white hover:bg-blue-400'">
+        Pedir turno
+      </button>
+      <button (click)="viewMode = 'list'" class="px-4 py-2 rounded shadow text-blue-900 font-semibold"
+              [ngClass]="viewMode === 'list' ? 'bg-blue-400' : 'bg-white hover:bg-blue-400'">
+        Ver turnos
+      </button>
+    </div>
+
+    <ng-container *ngIf="viewMode === 'form'">
+      <app-appointment-request></app-appointment-request>
+    </ng-container>
+
+    <ng-container *ngIf="viewMode === 'list'">
+      <app-appointment-overview></app-appointment-overview>     
+    </ng-container>
+  </div>
+</div>

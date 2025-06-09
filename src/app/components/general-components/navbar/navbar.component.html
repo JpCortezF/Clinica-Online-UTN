@@ -1,8 +1,7 @@
-<nav class= "border-gray-200 bg-blue-900 fixed top-0 left-0 right-0 z-50 shadow-md">
+<nav class= "border-gray-200 bg-gradient-to-r from-blue-950 to-blue-800 fixed top-0 left-0 right-0 z-50 shadow-md">
   <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
     <a routerLink="/" class="flex items-center space-x-3 rtl:space-x-reverse">
         <img src="JB-Clinica.png" class="h-14" alt="Jb-clínica logo" />
-        <span class="self-center text-2xl font-semibold whitespace-nowrap text-gray-200">Online</span>
     </a>
     <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
       <ng-container *ngIf="user">
@@ -30,8 +29,11 @@
               <span class="block text-sm text-gray-500 truncate">{{ user.last_name }}</span>
             </div>
             <ul class="py-1 text-sm text-gray-900" aria-labelledby="userDropdownButton">
-              <li *ngIf="user.user_type === 'patient'">
-                <a routerLink="/profile" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Mis Turnos</a>
+              <li *ngIf="user.user_type === 'specialist'">
+                <a (click)="goToProfile()" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Perfil</a>
+              </li>
+              <li *ngIf="user.user_type === 'patient' || user.user_type === 'specialist'">
+                <a (click)="goToAppointment()" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Mis Turnos</a>
               </li>
               <li>
                 <button (click)="logout()" class="block w-full text-left px-4 py-2 hover:bg-gray-200">
@@ -62,12 +64,11 @@
     </div>
 
     <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
-      <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-blue-900 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0">
+      <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0">        
         <li>
-          <a href="#" class="block py-2 px-3 text-white rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-gray-300 md:p-0">Turnos</a>
-        </li>
-        <li>
-          <a href="#" class="block py-2 px-3 text-white rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-gray-300 md:p-0">Servicios</a>
+          <button type="button" (click)="goToServices()">
+            <a class="block py-2 px-3 text-white rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-gray-300 md:p-0">Servicios</a>
+          </button>
         </li>
         <li>
           <a href="#" class="block py-2 px-3 text-white rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-gray-300 md:p-0">Contacto</a>

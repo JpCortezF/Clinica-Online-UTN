@@ -1,0 +1,82 @@
+<div class="mb-4 flex justify-end items-center">
+  <div class="relative w-full max-w-xs">
+    <input [(ngModel)]="searchTerm" class="input w-full pl-10 pr-3 py-2 rounded shadow" placeholder="Buscar especialista o especialidad..." />
+    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387-1.414 1.414-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
+    </svg>
+  </div>
+</div>
+
+<div class="overflow-x-auto">
+  <table class="min-w-full bg-white rounded shadow">
+    <thead>
+      <tr class="bg-blue-100 text-blue-900 text-left">
+        <th class="px-4 py-2">Fecha de la solicitud</th>
+        <th class="px-4 py-2">Mensaje</th>
+        <th class="px-4 py-2">Fecha del turno</th>
+        <th class="px-4 py-2">Especialista asignado</th>
+        <th class="px-4 py-2">Especialidad</th>
+        <th class="px-4 py-2">Estado del Turno</th>
+        <th class="px-4 py-2">Modificar turno</th>
+        <th class="px-4 py-2">Reseña</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngIf="filteredAppointments().length > 0; else noAppointments">
+        <tr *ngFor="let appt of filteredAppointments()" class="border-b hover:bg-gray-100">
+          <td class="px-4 py-2">{{ appt.request_date | date:'dd/MM/yyyy' }}</td>
+          <td class="px-4 py-2">{{ appt.request_message }}</td>
+          <td class="px-4 py-2">{{ appt.appointment_date | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-4 py-2">{{ appt.specialist_name }}</td>
+          <td class="px-4 py-2">{{ appt.specialty_name }}</td>
+          <td class="px-4 py-2 font-semibold capitalize">{{ appt.status }}</td>
+
+          <!-- Modificar turno -->
+          <td class="px-4 py-2 space-y-1">
+            <ng-container *ngIf="appt.status !== 'realizado' && appt.status !== 'cancelado'">
+              <button (click)="cancelAppointment(appt.id)"
+                      class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-sm">
+                Cancelar
+              </button>
+            </ng-container>
+
+            <ng-container *ngIf="appt.status === 'realizado' && !appt.review">
+              <button (click)="rateAppointment(appt.id)"
+                      class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">
+                Calificar
+              </button>
+            </ng-container>
+
+            <ng-container *ngIf="appt.status === 'realizado' && !appt.survey_completed">
+              <button (click)="completeSurvey(appt.id)"
+                      class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm block">
+                Encuesta
+              </button>
+            </ng-container>
+          </td>
+
+          <!-- Reseña -->
+          <td class="px-4 py-2 italic text-gray-700 text-sm">
+            <ng-container *ngIf="appt.review; else noReview">
+              <button (click)="viewReview(appt.review!)"
+                      class="underline text-blue-600 hover:text-blue-800">
+                Ver reseña
+              </button>
+            </ng-container>
+            <ng-template #noReview>-</ng-template>
+          </td>
+        </tr>
+      </ng-container>
+
+      <ng-template #noAppointments>
+        <tr>
+          <td colspan="8" class="h-12 text-center text-gray-400 italic">&nbsp;</td>
+        </tr>
+      </ng-template>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="filteredAppointments().length === 0" class="text-center text-white italic mt-6">
+  Aún no ha solicitado ningún turno.
+</div>

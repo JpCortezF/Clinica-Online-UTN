@@ -68,4 +68,7 @@ export class AuthService {
     return userData;
   }
 
+  setCurrentUser(user: User | null): void {
+    this.currentUserSubject.next(user);
+  }
 }

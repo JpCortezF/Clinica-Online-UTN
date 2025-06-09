@@ -19,6 +19,8 @@ export class LoginComponent {
   router = inject(Router);
   form_login!: FormGroup;
   loginError = '';
+  email: string = "";
+  password: string = "";
 
 
   ngOnInit(): void {
@@ -29,10 +31,20 @@ export class LoginComponent {
   }
 
   invalid(control: string) {
+    if (!this.form_login) return false;
     const c = this.form_login.get(control);
     return !!(c && c.invalid && c.touched);
   }
   
+  quickLogin(email: string, password: string) {
+    this.form_login = this.fb.group({
+      email: email,
+      password: password
+    });
+
+    this.onSubmit();
+  }
+
   async onSubmit() {
     this.form_login.markAllAsTouched();
     if (this.form_login.invalid) return;
@@ -46,9 +58,9 @@ export class LoginComponent {
     }
 
     this.auth.currentUser$.pipe(take(1)).subscribe(user => {
-    if (user) {
-      this.router.navigate(['/']);
-    }
+      if (user) {
+        this.router.navigate(['/']);
+      }
     });
   }
 }
