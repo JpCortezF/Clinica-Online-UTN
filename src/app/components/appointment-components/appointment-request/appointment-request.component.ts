@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatabaseService } from '../../../services/database.service';
 
@@ -10,28 +10,30 @@ import { DatabaseService } from '../../../services/database.service';
   styleUrl: './appointment-request.component.css'
 })
 export class AppointmentRequestComponent {
+  @Input() user!: any;
   db = inject(DatabaseService);
   appointmentForm!: FormGroup;
-  specialties: string[] = [];
+  specialties: { id: number, name: string }[] = [];
   specialists: any[] = [];
-  availableDates: string[] = [];
+  availableDates: { label: string; value: string }[] = [];
   availableTimes: string[] = [];
 
   constructor(private fb: FormBuilder){}
 
   async ngOnInit() {
     this.appointmentForm = this.fb.group({
-      specialty: ['', Validators.required],
+      specialtyId: ['', Validators.required],
       specialistId: ['', Validators.required],
       date: ['', Validators.required],
       time: ['', Validators.required],
     });
-
     this.loadSpecialties();
 
-    this.appointmentForm.get('specialty')?.valueChanges.subscribe(value => {
-      this.loadSpecialists(value);
-      this.appointmentForm.get('specialistId')?.reset();
+    this.appointmentForm.get('specialtyId')?.valueChanges.subscribe(value => {
+      if (value) {
+        this.loadSpecialists(value);
+        this.appointmentForm.get('specialistId')?.reset();
+      }
     });
 
     this.appointmentForm.get('specialistId')?.valueChanges.subscribe(value => {
@@ -47,22 +49,103 @@ export class AppointmentRequestComponent {
     this.specialties = await this.db.getSpecialties();
   }
 
-  async loadSpecialists(specialty: string) {
-    this.specialists = await this.db.getSpecialistsBySpecialtyName(specialty);
+  async loadSpecialists(specialty_id: number) {
+    this.specialists = await this.db.getSpecialistsBySpecialtyId(specialty_id);
   }
 
-  loadDates(specialistId: string) {
-    this.availableDates = ['2025-07-23', '2025-07-24', '2025-07-25'];
+  async loadDates(specialistId: number) {
+    if (!specialistId) return;
+
+    const officeHours = await this.db.getOfficeHoursBySpecialistId(specialistId);
+    const today = new Date();
+    const dates: { label: string; value: string }[] = [];
+
+    for (let i = 0; i < 15; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+
+      const dayOfWeek = date.toLocaleDateString('es-AR', { weekday: 'long' }).toLowerCase();
+
+      if (officeHours[dayOfWeek]) {
+        const value = date.toISOString().split('T')[0];
+        const label = date.toLocaleDateString('es-AR', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+
+        dates.push({
+          value,
+          label: label.charAt(0).toUpperCase() + label.slice(1),
+        });
+      }
+    }
+
+    this.availableDates = dates;
   }
 
-  loadTimes(date: string) {
-    this.availableTimes = ['09:00', '11:00', '13:30', '15:00'];
+  async loadTimes(dateStr: string) {
+    const specialistId = this.appointmentForm.get('specialistId')?.value;
+    if (!specialistId || !dateStr) return;
+
+    const officeHours = await this.db.getOfficeHoursBySpecialistId(specialistId);
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // 👈 fecha local correcta
+
+    const dayOfWeek = date.toLocaleDateString('es-AR', { weekday: 'long' }).toLowerCase().trim();
+
+    const daySchedule = officeHours[dayOfWeek];
+
+    if (!daySchedule) {
+      this.availableTimes = [];
+      return;
+    }
+
+    const times: string[] = [];
+    let [startH, startM] = daySchedule.start.split(':').map(Number);
+    let [endH, endM] = daySchedule.end.split(':').map(Number);
+
+    const start = new Date(date);
+    start.setHours(startH, startM, 0, 0);
+
+    const endLimit = new Date(date);
+    endLimit.setHours(endH, endM, 0, 0);
+    endLimit.setMinutes(endLimit.getMinutes() - 30); // Último turno válido
+
+    while (start <= endLimit) {
+      times.push(start.toTimeString().slice(0, 5));
+      start.setMinutes(start.getMinutes() + 30);
+    }
+
+    this.availableTimes = times;
   }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.appointmentForm.invalid) return;
 
-    console.log('Turno solicitado:', this.appointmentForm.value);
-    // Lógica para insertar el turno en Supabase
+    const form = this.appointmentForm.value;
+    const [year, month, day] = form.date.split('-');
+    const [hour, minute] = form.time.split(':');
+    const appointmentDate = `${year}-${month}-${day} ${hour}:${minute}:00`;
+
+    try {
+      const conflict = await this.db.checkAppointmentConflict(form.specialistId, appointmentDate);
+
+      if (conflict) {
+        alert('Ese turno ya fue asignado. Elegí otro horario.');
+        return;
+      }
+
+      const patientId = await this.db.getPatientIdByUserId(this.user.id);
+
+      await this.db.insertAppointment(patientId, form.specialistId, form.specialtyId, appointmentDate);
+
+      console.log('¡Turno solicitado con éxito!');
+      this.appointmentForm.reset(); 
+    } catch (error) {
+      console.error('Error al solicitar turno:', error);
+    }
   }
 }

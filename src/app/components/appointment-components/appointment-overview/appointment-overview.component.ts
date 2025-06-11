@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, Input, SimpleChanges } from '@angular/core';
 import { Appointment } from '../../../interfaces/appointment';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DatabaseService } from '../../../services/database.service';
 
 @Component({
   selector: 'app-appointment-overview',
@@ -10,30 +11,69 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './appointment-overview.component.css'
 })
 export class AppointmentOverviewComponent {
-  @Input() appointments: Appointment[] = [];
+  @Input() user!: any;
+  db = inject(DatabaseService);
+  appointments: Appointment[] = [];
   searchTerm = '';
+  filterStatus: 'pendiente' | 'realizado' | 'cancelados' | 'aceptado' = 'pendiente';
 
-  filteredAppointments() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['user']?.currentValue) {
+      const user = changes['user'].currentValue;
+      this.loadAppointments(user.id);
+    }
+  }
+
+  private async loadAppointments(userId: number) {
+    this.appointments = await this.db.getAppointmentsByPatient(userId);
+  }
+
+  filteredAppointments(): Appointment[] {
     const term = this.searchTerm.toLowerCase();
-    return this.appointments.filter(appt =>
-      appt.specialist_name.toLowerCase().includes(term) ||
-      appt.specialty_name.toLowerCase().includes(term)
-    );
+
+    return this.appointments.filter(appt => {
+      const matchesSearch =
+        appt.specialist_name.toLowerCase().includes(term) ||
+        appt.specialty_name.toLowerCase().includes(term);
+
+      const matchesStatus =
+      this.filterStatus === 'cancelados'
+        ? appt.status === 'cancelado' || appt.status === 'rechazado'
+        : this.filterStatus === 'pendiente'
+          ? appt.status === 'pendiente' || appt.status === 'aceptado'
+          : appt.status === this.filterStatus;
+
+      return matchesSearch && matchesStatus;
+    });
   }
 
-  cancelAppointment(id: number) {
-    // lógica para cancelar (puede emitir un evento si querés notificar al padre)
-    console.log('Cancelar turno:', id);
+  async cancelAppointment(appointmentId: number) {
+    const reason = prompt('Motivo de la cancelación del turno:');
+    if (!reason?.trim()) return;
+
+    const success = await this.db.updateAppointmentStatus(appointmentId, 'cancelado', reason.trim());
+    if (success) await this.reloadAppointments();
   }
 
-  rateAppointment(id: number) {
+  private async reloadAppointments() {
+    if (this.user?.id) {
+      this.appointments = await this.db.getAppointmentsBySpecialist(this.user.id);
+    }
+  }
+
+  async deleteAppointment(appointmentId: number) {
+    const success = await this.db.deleteAppointment(appointmentId);
+    if (success) await this.reloadAppointments();
+  }
+
+  rateAppointment(appointmentId: number) {
     // lógica para calificar
-    console.log('Calificar atención:', id);
+    console.log('Calificar atención:', appointmentId);
   }
 
-  completeSurvey(id: number) {
+  completeSurvey(appointmentId: number) {
     // lógica para encuesta
-    console.log('Completar encuesta:', id);
+    console.log('Completar encuesta:', appointmentId);
   }
 
   viewReview(review: string) {

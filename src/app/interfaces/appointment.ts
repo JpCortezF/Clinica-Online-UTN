@@ -7,5 +7,6 @@ export interface Appointment {
   review: string | null;
   specialty_name: string;
   specialist_name: string;
+  patient_name: string;
   survey_completed: boolean;
 }

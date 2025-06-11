@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class UserService {
   private currentUser: any = null;
-
+  
   setUser(user: any) {
     this.currentUser = user;
   }

@@ -38,7 +38,8 @@ export class Specialist extends User {
     email: string,
     password: string,
     profile_image_url: string,
-    public specialties: string[]
+    public specialties: string[],
+    public office_hours: { [day: string]: { start: string; end: string } } = {}
   ) {
     super(first_name, last_name, age, dni, email, password, profile_image_url, 'specialist');
   }

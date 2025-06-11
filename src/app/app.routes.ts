@@ -6,6 +6,6 @@ export const routes: Routes = [
   { path: 'account', loadComponent: () => import('./pages/account/account.component').then((archivo) => archivo.AccountComponent)},
   { path: 'register/:type', loadComponent: () => import('./pages/register/register.component').then((archivo) => archivo.RegisterComponent)},
   { path: 'login',  loadComponent: () => import('./pages/login/login.component').then((archivo) => archivo.LoginComponent)},
-  { path: 'profile',  loadComponent: () => import('./pages/profile/profile.component').then((archivo) => archivo.ProfileComponent)},
+  { path: 'specialist-profile', loadComponent: () => import('./pages/specialist-profile/specialist-profile.component').then((archivo) => archivo.SpecialistProfileComponent)},
   { path: 'appointment',  loadComponent: () => import('./pages/appointment/appointment.component').then((archivo) => archivo.AppointmentComponent)},
 ];

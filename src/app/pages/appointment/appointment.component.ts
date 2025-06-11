@@ -5,10 +5,11 @@ import { CommonModule } from '@angular/common';
 import { DatabaseService } from '../../services/database.service';
 import { FormsModule } from '@angular/forms';
 import { AppointmentOverviewComponent } from '../../components/appointment-components/appointment-overview/appointment-overview.component';
+import { SpecialistOverviewComponent } from "../../components/appointment-components/specialist-overview/specialist-overview.component";
 
 @Component({
   selector: 'app-appointment',
-  imports: [AppointmentRequestComponent, AppointmentOverviewComponent, CommonModule, FormsModule],
+  imports: [AppointmentRequestComponent, AppointmentOverviewComponent, CommonModule, FormsModule, SpecialistOverviewComponent],
   templateUrl: './appointment.component.html',
   styleUrl: './appointment.component.css'
 })
@@ -19,10 +20,20 @@ export class AppointmentComponent {
   user: any = null;
   searchTerm = '';
   viewMode: 'form' | 'list' = 'list';
+  isLoading = true;
+  isPatient = false;
 
   async ngOnInit() {
+    while (!this.userSession.getUser()) {
+      await new Promise(r => setTimeout(r, 50));
+    }
+    
     this.user = this.userSession.getUser();
+    if(this.user.user_type === 'patient'){
+      this.isPatient = true;
+    }
     this.loadAppointments();
+    this.isLoading = false;
   }
 
   async loadAppointments(){

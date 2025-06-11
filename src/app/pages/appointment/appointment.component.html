@@ -1,24 +1,47 @@
-<div class="min-h-screen bg-gradient-to-b from-blue-900 to-blue-500 flex justify-center pt-20">
-  <div class="bg-blue-300 p-6 rounded-lg shadow-md w-full max-w-5xl">
-    <h1 class="text-4xl font-bold text-center text-white mb-6">Mis Turnos</h1>
-
-    <div class="flex justify-center mb-6 space-x-4">
-      <button (click)="viewMode = 'form'" class="px-4 py-2 rounded shadow text-blue-900 font-semibold"
-              [ngClass]="viewMode === 'form' ? 'bg-blue-400' : 'bg-white hover:bg-blue-400'">
-        Pedir turno
-      </button>
-      <button (click)="viewMode = 'list'" class="px-4 py-2 rounded shadow text-blue-900 font-semibold"
-              [ngClass]="viewMode === 'list' ? 'bg-blue-400' : 'bg-white hover:bg-blue-400'">
-        Ver turnos
-      </button>
+<div class="min-h-screen bg-gradient-to-b from-blue-800 to-blue-600 flex flex-col items-center pt-16 pb-10 px-4">
+  <!-- Contenedor principal -->
+  <div class="w-full max-w-7xl space-y-8">
+    <!-- Tarjeta de título -->
+    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
+      <h1 class="text-4xl md:text-5xl font-bold text-center text-white mb-2">Mis Turnos</h1>
+      <p class="text-center text-blue-100 text-lg">Gestiona tus turnos médicos</p>
     </div>
 
-    <ng-container *ngIf="viewMode === 'form'">
-      <app-appointment-request></app-appointment-request>
-    </ng-container>
+    <!-- Selector de vista (solo para pacientes) -->
+    <div *ngIf="isPatient" class="flex justify-center">
+      <div class="inline-flex rounded-lg bg-white/20 p-1 backdrop-blur-sm border border-white/20">
+        <button 
+          (click)="viewMode = 'form'"
+          class="px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300"
+          [ngClass]="viewMode === 'form' 
+            ? 'bg-white text-blue-800 shadow-md' 
+            : 'text-white hover:bg-white/10'">
+          <i class="fas fa-calendar-plus mr-2"></i>Solicitar turno
+        </button>
+        <button 
+          (click)="viewMode = 'list'"
+          class="px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300"
+          [ngClass]="viewMode === 'list' 
+            ? 'bg-white text-blue-800 shadow-md' 
+            : 'text-white hover:bg-white/10'">
+          <i class="fas fa-list-ul mr-2"></i>Ver turnos
+        </button>
+      </div>
+    </div>
 
-    <ng-container *ngIf="viewMode === 'list'">
-      <app-appointment-overview></app-appointment-overview>     
-    </ng-container>
+    <!-- Contenido dinámico -->
+    <div class="transition-all duration-300 ease-in-out">
+      <ng-container *ngIf="viewMode === 'form'">
+        <app-appointment-request *ngIf="user" [user]="user" class="block animate-fadeIn"></app-appointment-request>
+      </ng-container>
+
+      <ng-container *ngIf="viewMode === 'list' && isPatient">
+        <app-appointment-overview *ngIf="user" [user]="user" class="block animate-fadeIn"></app-appointment-overview>
+      </ng-container>
+
+      <ng-container *ngIf="viewMode === 'list' && !isPatient">
+        <app-specialist-overview *ngIf="user" [user]="user" class="block animate-fadeIn"></app-specialist-overview>
+      </ng-container>
+    </div>
   </div>
 </div>

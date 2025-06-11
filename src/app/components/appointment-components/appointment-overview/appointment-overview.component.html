@@ -1,82 +1,159 @@
-<div class="mb-4 flex justify-end items-center">
+<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+  
+  <div class="flex flex-wrap gap-3">
+    <button (click)="filterStatus = 'pendiente'" 
+            [ngClass]="{
+              'bg-blue-100 text-blue-800 border-blue-300': filterStatus === 'pendiente',
+              'bg-white text-gray-700 border-gray-300': filterStatus !== 'pendiente'
+            }"
+            class="px-4 py-2 rounded-lg border-2 flex items-center gap-2 hover:shadow-md transition-all">
+      <i class="far fa-clock text-blue-600"></i>
+      <span class="font-medium">Pendientes / Aceptados</span>
+      <i *ngIf="filterStatus === 'pendiente'" class="fas fa-arrow-right ml-1 text-blue-600"></i>
+    </button>
+
+    <button (click)="filterStatus = 'realizado'"
+            [ngClass]="{
+              'bg-green-100 text-green-800 border-green-300': filterStatus === 'realizado',
+              'bg-white text-gray-700 border-gray-300': filterStatus !== 'realizado'
+            }"
+            class="px-4 py-2 rounded-lg border-2 flex items-center gap-2 hover:shadow-md transition-all">
+      <i class="fas fa-check-circle text-green-600"></i>
+      <span class="font-medium">Realizados</span>
+      <i *ngIf="filterStatus === 'realizado'" class="fas fa-arrow-right ml-1 text-green-600"></i>
+    </button>
+
+    <button (click)="filterStatus = 'cancelados'"
+            [ngClass]="{
+              'bg-red-100 text-red-800 border-red-300': filterStatus === 'cancelados',
+              'bg-white text-gray-700 border-gray-300': filterStatus !== 'cancelados'
+            }"
+            class="px-4 py-2 rounded-lg border-2 flex items-center gap-2 hover:shadow-md transition-all">
+      <i class="fas fa-times-circle text-red-600"></i>
+      <span class="font-medium">Cancelados</span>
+      <i *ngIf="filterStatus === 'cancelados'" class="fas fa-arrow-right ml-1 text-red-600"></i>
+    </button>
+  </div>
+
   <div class="relative w-full max-w-xs">
-    <input [(ngModel)]="searchTerm" class="input w-full pl-10 pr-3 py-2 rounded shadow" placeholder="Buscar especialista o especialidad..." />
-    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-      <path fill-rule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387-1.414 1.414-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
-    </svg>
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <i class="fas fa-search text-gray-400"></i>
+    </div>
+    <input [(ngModel)]="searchTerm" 
+           class="input w-full pl-10 pr-4 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" 
+           placeholder="Buscar especialista o especialidad..." />
   </div>
 </div>
 
-<div class="overflow-x-auto">
-  <table class="min-w-full bg-white rounded shadow">
+<div class="overflow-x-auto rounded-lg border-2 border-gray-200 shadow-sm">
+  <table class="min-w-full bg-white">
     <thead>
-      <tr class="bg-blue-100 text-blue-900 text-left">
-        <th class="px-4 py-2">Fecha de la solicitud</th>
-        <th class="px-4 py-2">Mensaje</th>
-        <th class="px-4 py-2">Fecha del turno</th>
-        <th class="px-4 py-2">Especialista asignado</th>
-        <th class="px-4 py-2">Especialidad</th>
-        <th class="px-4 py-2">Estado del Turno</th>
-        <th class="px-4 py-2">Modificar turno</th>
-        <th class="px-4 py-2">Reseña</th>
+      <tr class="bg-blue-50 text-blue-900 text-left uppercase text-sm border-b-2 border-blue-100">
+        <th class="px-4 py-3 whitespace-nowrap"><i class="far fa-calendar-alt mr-2"></i>Fecha solicitud</th>
+        <th class="px-4 py-3 whitespace-nowrap"><i class="far fa-comment-alt mr-2"></i>Mensaje</th>
+        <th class="px-4 py-3 whitespace-nowrap"><i class="far fa-clock mr-2"></i>Fecha turno</th>
+        <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-user-md mr-2"></i>Especialista</th>
+        <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-stethoscope mr-2"></i>Especialidad</th>
+        <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-info-circle mr-2"></i>Estado</th>
+        <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-cog mr-2"></i>Acciones</th>
+        <th class="px-4 py-3 whitespace-nowrap">Reseña</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody class="divide-y divide-gray-100">
       <ng-container *ngIf="filteredAppointments().length > 0; else noAppointments">
-        <tr *ngFor="let appt of filteredAppointments()" class="border-b hover:bg-gray-100">
-          <td class="px-4 py-2">{{ appt.request_date | date:'dd/MM/yyyy' }}</td>
-          <td class="px-4 py-2">{{ appt.request_message }}</td>
-          <td class="px-4 py-2">{{ appt.appointment_date | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td class="px-4 py-2">{{ appt.specialist_name }}</td>
-          <td class="px-4 py-2">{{ appt.specialty_name }}</td>
-          <td class="px-4 py-2 font-semibold capitalize">{{ appt.status }}</td>
+        <tr *ngFor="let appt of filteredAppointments()" class="hover:bg-blue-50 transition-colors">
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+            {{ appt.request_date | date:'dd/MM/yyyy' }}
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message">
+            {{ appt.request_message || 'Sin mensaje' }}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+            {{ appt.appointment_date | date:'dd/MM/yyyy HH:mm' }}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+            <i class="fas fa-user mr-1"></i> {{ appt.specialist_name || 'Sin asignar' }}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+            {{ appt.specialty_name }}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <span [ngClass]="{
+              'bg-yellow-100 text-yellow-800': appt.status === 'pendiente',
+              'bg-blue-100 text-blue-800': appt.status === 'aceptado',
+              'bg-green-100 text-green-800': appt.status === 'realizado',
+              'bg-red-100 text-red-800': appt.status === 'cancelado'
+            }" class="px-2 py-1 rounded-full text-xs font-semibold">
+              <i [ngClass]="{
+                'far fa-clock': appt.status === 'pendiente',
+                'fas fa-check': appt.status === 'aceptado',
+                'fas fa-check-double': appt.status === 'realizado',
+                'fas fa-ban': appt.status === 'cancelado'
+              }" class="mr-1"></i>
+              {{ appt.status | titlecase }}
+            </span>
+          </td>
 
-          <!-- Modificar turno -->
-          <td class="px-4 py-2 space-y-1">
+          <td class="px-4 py-3 whitespace-nowrap space-x-2">
             <ng-container *ngIf="appt.status !== 'realizado' && appt.status !== 'cancelado'">
               <button (click)="cancelAppointment(appt.id)"
-                      class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 text-sm">
-                Cancelar
+                      class="text-red-600 hover:text-red-800 px-3 py-1 rounded-full hover:bg-red-50 transition-colors text-sm flex items-center"
+                      title="Cancelar turno">
+                <i class="fas fa-times-circle mr-1"></i> Cancelar
+              </button>
+            </ng-container>
+            <ng-container *ngIf="appt.status === 'cancelado'">
+              <button (click)="deleteAppointment(appt.id)"
+                      class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition-colors"
+                      title="Eliminar turno">
+                <i class="fas fa-trash-alt"></i>
               </button>
             </ng-container>
 
             <ng-container *ngIf="appt.status === 'realizado' && !appt.review">
               <button (click)="rateAppointment(appt.id)"
-                      class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">
-                Calificar
+                      class="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50 transition-colors"
+                      title="Calificar atención">
+                <i class="fas fa-star"></i>
               </button>
             </ng-container>
 
             <ng-container *ngIf="appt.status === 'realizado' && !appt.survey_completed">
               <button (click)="completeSurvey(appt.id)"
-                      class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm block">
-                Encuesta
+                      class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 transition-colors"
+                      title="Completar encuesta">
+                <i class="fas fa-clipboard-list"></i>
               </button>
             </ng-container>
           </td>
 
-          <!-- Reseña -->
-          <td class="px-4 py-2 italic text-gray-700 text-sm">
+          <td class="px-4 py-3 whitespace-nowrap text-sm">
             <ng-container *ngIf="appt.review; else noReview">
               <button (click)="viewReview(appt.review!)"
-                      class="underline text-blue-600 hover:text-blue-800">
-                Ver reseña
+                      class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                <i class="fas fa-book-open"></i>
+                <span class="underline">Ver</span>
               </button>
             </ng-container>
-            <ng-template #noReview>-</ng-template>
+            <ng-template #noReview>
+              <span class="text-gray-400">—</span>
+            </ng-template>
           </td>
         </tr>
       </ng-container>
 
+
       <ng-template #noAppointments>
         <tr>
-          <td colspan="8" class="h-12 text-center text-gray-400 italic">&nbsp;</td>
+          <td colspan="8" class="px-4 py-8 text-center">
+            <div class="flex flex-col items-center justify-center text-gray-400">
+              <i class="fas fa-calendar-times text-4xl mb-2"></i>
+              <p class="text-lg font-medium">No se encontraron turnos</p>
+              <p class="text-sm">Prueba cambiando los filtros de búsqueda</p>
+            </div>
+          </td>
         </tr>
       </ng-template>
     </tbody>
   </table>
-</div>
-
-<div *ngIf="filteredAppointments().length === 0" class="text-center text-white italic mt-6">
-  Aún no ha solicitado ningún turno.
 </div>

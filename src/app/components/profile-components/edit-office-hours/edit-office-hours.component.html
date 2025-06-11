@@ -1,0 +1,29 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50" (click)="onCancel()">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg" (click)="$event.stopPropagation()">
+    <h2 class="text-2xl font-bold mb-4">Editar Horarios de Atención</h2>
+
+    <p class="font-semibold mb-2">Selecciona los días:</p>
+    <div class="grid grid-cols-3 gap-2 mb-6">
+      <label *ngFor="let day of days" class="flex items-center space-x-2">
+        <input type="checkbox" [checked]="isChecked(day)" (change)="toggleDay(day)" />
+        <span>{{ dayLabels[day] }}</span>
+      </label>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="font-medium">Horario de inicio:</label>
+        <input type="time" [(ngModel)]="start" class="w-full border px-2 py-1 rounded" />
+      </div>
+      <div>
+        <label class="font-medium">Horario de fin:</label>
+        <input type="time" [(ngModel)]="end" class="w-full border px-2 py-1 rounded" />
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-2">
+      <button (click)="onCancel()" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</button>
+      <button (click)="onSave()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+    </div>
+  </div>
+</div>

@@ -1,39 +1,96 @@
-<div class="flex justify-center">
-  <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="space-y-4 md:w-[50%] w-[90%]">
-    <div>
-      <label class="block text-gray-700 font-semibold mb-1">Seleccione especialidad</label>
-      <select class="input w-full" formControlName="specialty">
-        <option value="" disabled selected>-- Elija una especialidad --</option>
-        <option *ngFor="let spec of specialties" [value]="spec">{{ spec }}</option>
-      </select>
+<div class="flex justify-center px-4 py-8">
+  <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="w-full max-w-2xl">
+    <!-- Tarjeta contenedora con efecto vidrio -->
+    <div class="bg-white/10 backdrop-blur-sm rounded-xl shadow-2xl border border-white/20 p-6 md:p-8">
+      <h2 class="text-2xl font-bold text-white mb-6 text-center">Solicitar Nuevo Turno</h2>
+      
+      <!-- Especialidad -->
+      <div class="mb-6">
+        <label class="block text-white font-medium mb-2">
+          <i class="fas fa-stethoscope mr-2"></i>Especialidad Médica
+        </label>
+        <select 
+          formControlName="specialtyId"
+          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+          [ngClass]="{'border-red-400': appointmentForm.get('specialtyId')?.invalid && appointmentForm.get('specialtyId')?.touched}">
+          <option value="" disabled selected>Seleccione una especialidad</option>
+          <option *ngFor="let spec of specialties" [value]="spec.id">
+            {{ spec.name }}
+          </option>
+        </select>
+        <div *ngIf="appointmentForm.get('specialtyId')?.invalid && appointmentForm.get('specialtyId')?.touched" 
+             class="text-red-200 text-sm mt-1">
+          Por favor seleccione una especialidad
+        </div>
+      </div>
+
+      <!-- Profesional -->
+      <div *ngIf="specialists.length > 0" class="mb-6 animate-fade-in">
+        <label class="block text-white font-medium mb-2">
+          <i class="fas fa-user-md mr-2"></i>Profesional
+        </label>
+        <select 
+          formControlName="specialistId"
+          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+          [ngClass]="{'border-red-400': appointmentForm.get('specialistId')?.invalid && appointmentForm.get('specialistId')?.touched}">
+          <option value="" disabled selected>Seleccione un profesional</option>
+          <option *ngFor="let sp of specialists" [value]="sp.id">
+            Dr./Dra. {{ sp.user.first_name }} {{ sp.user.last_name }}
+          </option>
+        </select>
+        <div *ngIf="appointmentForm.get('specialistId')?.invalid && appointmentForm.get('specialistId')?.touched" 
+             class="text-red-200 text-sm mt-1">
+          Por favor seleccione un profesional
+        </div>
+      </div>
+
+      <!-- Fecha -->
+      <div *ngIf="availableDates.length > 0" class="mb-6 animate-fade-in">
+        <label class="block text-white font-medium mb-2">
+          <i class="far fa-calendar-alt mr-2"></i>Fecha Disponible
+        </label>
+        <select 
+          formControlName="date"
+          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+          [ngClass]="{'border-red-400': appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched}">
+          <option value="" disabled selected>Seleccione una fecha</option>
+          <option *ngFor="let d of availableDates" [value]="d.value">
+            {{ d.label }}
+          </option>
+        </select>
+        <div *ngIf="appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched" 
+             class="text-red-200 text-sm mt-1">
+          Por favor seleccione una fecha
+        </div>
+      </div>
+
+      <!-- Horario -->
+      <div *ngIf="availableTimes.length > 0" class="mb-8 animate-fade-in">
+        <label class="block text-white font-medium mb-2">
+          <i class="far fa-clock mr-2"></i>Horario Disponible
+        </label>
+        <select 
+          formControlName="time"
+          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+          [ngClass]="{'border-red-400': appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched}">
+          <option value="" disabled selected>Seleccione un horario</option>
+          <option *ngFor="let t of availableTimes" [value]="t">
+            {{ t }}
+          </option>
+        </select>
+        <div *ngIf="appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched" 
+             class="text-red-200 text-sm mt-1">
+          Por favor seleccione un horario
+        </div>
+      </div>
+
+      <!-- Botón de submit -->
+      <button 
+        type="submit"
+        [disabled]="appointmentForm.invalid"
+        class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-300 disabled:bg-gray-500">
+        <i class="fas fa-calendar-check mr-2"></i>Confirmar Turno
+      </button>
     </div>
-  
-    <div *ngIf="specialists.length > 0">
-      <label class="block text-gray-700 font-semibold mb-1">Seleccione un profesional</label>
-      <select class="input w-full" formControlName="specialistId">
-        <option value="" disabled selected>-- Elija un especialista --</option>
-        <option *ngFor="let sp of specialists" [value]="sp.id">
-          {{ sp.user.first_name }} {{ sp.user.last_name }}
-        </option>
-      </select>
-    </div>
-  
-    <div *ngIf="availableDates.length > 0">
-      <label class="block text-gray-700 font-semibold mb-1">Seleccione un día disponible</label>
-      <select class="input w-full" formControlName="date">
-        <option *ngFor="let d of availableDates" [value]="d">{{ d }}</option>
-      </select>
-    </div>
-  
-    <div *ngIf="availableTimes.length > 0">
-      <label class="block text-gray-700 font-semibold mb-1">Seleccione un horario</label>
-      <select class="input w-full" formControlName="time">
-        <option *ngFor="let t of availableTimes" [value]="t">{{ t }}</option>
-      </select>
-    </div>
-  
-    <button class="bg-blue-800 hover:bg-blue-700 text-white py-2 px-4 rounded mt-4 w-full" type="submit">
-      Solicitar turno
-    </button>
   </form>
 </div>

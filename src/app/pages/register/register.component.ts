@@ -25,7 +25,7 @@ export class RegisterComponent {
   secondProfileImageFile: File | null = null;
   
   newSpecialty = '';
-  allSpecialties: string[] = [];
+  allSpecialties: { id: number, name: string }[] = [];
   selectedSpecialty = '';
 
   submitted = false;
