@@ -396,7 +396,7 @@ export class DatabaseService {
 
   async finalizeAppointment(id: number, review: string): Promise<boolean> {
     const { error } = await this.sb.supabase
-    .from('appointments').update({ statud: 'realizado', review}).eq('id', id).single();
+    .from('appointments').update({ status: 'realizado', review}).eq('id', id).single();
 
     if(error){
       console.error('Error al finalizar el turno:', error);
