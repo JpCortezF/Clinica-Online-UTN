@@ -57,7 +57,7 @@ export class AuthService {
     if (!userData) return null;
 
     if (userData.user_type === 'patient') {
-      const { data: patientData } = await this.sb.supabase.from('patients').select('health_medical').eq('user_id', userData.id).single();
+      const { data: patientData } = await this.sb.supabase.from('patients').select('health_medical, second_profile_image_url').eq('user_id', userData.id).single();
 
       return {
         ...userData,
@@ -70,5 +70,10 @@ export class AuthService {
 
   setCurrentUser(user: User | null): void {
     this.currentUserSubject.next(user);
+  }
+
+  async getCurrentUserEmail(): Promise<string | null> {
+    const session = await this.sb.supabase.auth.getSession();
+    return session.data?.session?.user?.email || null;
   }
 }

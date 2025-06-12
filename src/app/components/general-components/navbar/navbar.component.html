@@ -29,7 +29,7 @@
               <span class="block text-sm text-gray-500 truncate">{{ user.last_name }}</span>
             </div>
             <ul class="py-1 text-sm text-gray-900" aria-labelledby="userDropdownButton">
-              <li *ngIf="user.user_type === 'specialist'">
+              <li *ngIf="user.user_type === 'specialist' || user.user_type === 'patient'">
                 <a (click)="goToProfile()" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Perfil</a>
               </li>
               <li *ngIf="user.user_type === 'patient' || user.user_type === 'specialist'">

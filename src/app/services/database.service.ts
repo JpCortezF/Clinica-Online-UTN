@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { ClinicaServices } from '../classes/clinica-services';
-import { Patient, Specialist, User, UserType } from '../classes/user';
+import { Patient, Specialist } from '../classes/user';
 import { AuthService } from './auth.service';
 import { Appointment } from '../interfaces/appointment';
+import { PatientProfileResponse } from '../interfaces/PatientProfile';
 
 @Injectable({
   providedIn: 'root'
@@ -164,6 +165,40 @@ export class DatabaseService {
     return data.id;
   }
 
+  async getPatientProfileData(userId: number) {
+    const { data, error } = await this.sb.supabase
+    .from('users')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      age,
+      dni,
+      profile_image_url,
+      patients (
+        health_medical,
+        second_profile_image_url
+      )
+    `)
+    .eq('id', userId)
+    .single<PatientProfileResponse>();
+
+  if (error || !data) {
+    console.error('Error al obtener datos del paciente:', error);
+    return null;
+  }
+  const patientData = data.patients as { health_medical: string, second_profile_image_url: string };
+  
+  return {
+     first_name: data.first_name,
+      last_name: data.last_name,
+      age: data.age,
+      dni: data.dni,
+      profile_image_url: data.profile_image_url,
+      health_medical: patientData?.health_medical || null,
+      second_profile_image_url: patientData?.second_profile_image_url || null
+  };
+}
 
   // ==================== SPECIALISTS ====================
 

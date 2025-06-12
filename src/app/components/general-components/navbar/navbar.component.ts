@@ -39,8 +39,12 @@ export class NavbarComponent {
   goToProfile() {
     if (this.user) {
       this.userSession.setUser(this.user);
-      if(this.user.user_type === 'specialist')
-      this.router.navigate(['/specialist-profile']);
+      if(this.user.user_type === 'specialist'){
+        this.router.navigate(['/specialist-profile']);
+      }
+      else if(this.user.user_type === 'patient'){
+        this.router.navigate(['/patients-profile']);
+      }
     }
   }
 
