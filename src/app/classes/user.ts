@@ -1,4 +1,4 @@
-export type UserType = 'patient' | 'specialist';
+export type UserType = 'patient' | 'specialist' | 'admin';
 
 export class User {
   constructor(

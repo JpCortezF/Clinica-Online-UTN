@@ -1,4 +1,4 @@
-<div class="min-h-screen flex items-center justify-center bg-white px-4">
+<div class="min-h-screen flex items-center justify-center bg-white px-4 py-20">
   <form *ngIf="form_register"
         [formGroup]="form_register"
         (ngSubmit)="onSubmit()"
@@ -64,7 +64,7 @@
             <label class="block font-medium mb-1">Especialidades</label>
             <div class="flex gap-2 mb-2">
               <select [(ngModel)]="selectedSpecialty" name="selectedSpecialty" class="input flex-1" [ngModelOptions]="{ standalone: true }">
-                <option *ngFor="let spec of allSpecialties" [value]="spec.id">{{ spec.name }}</option>
+                <option *ngFor="let spec of allSpecialties" [value]="spec.name">{{ spec.name }}</option>
               </select>
               <button type="button" (click)="addSpecialtyFromSelect()" class="btn">Agregar</button>
             </div>

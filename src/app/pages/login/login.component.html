@@ -4,26 +4,6 @@
     
     <h2 class="text-2xl font-semibold text-blue-900 mb-4">Iniciar sesión</h2>
 
-    <div class="flex justify-center gap-3 pb-2">
-        <!-- AD -->
-        <button (click)="quickLogin('admin@gmail.com', 'bushin')" 
-                class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center hover:bg-gray-500 transition-colors">
-          <span class="text-sm font-medium text-white">AD</span>
-        </button>
-
-        <!-- ME -->
-        <button (click)="quickLogin('jpbushin@gmail.com', '123456')" 
-                class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center hover:bg-gray-500 transition-colors">
-          <span class="text-sm font-medium text-white">ME</span>
-        </button>
-      
-        <!-- PA -->
-        <button (click)="quickLogin('melo@gmail.com', '123456')" 
-                class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center hover:bg-gray-500 transition-colors">
-          <span class="text-sm font-medium text-white">PA</span>
-        </button>
-      </div>
-
     <div>
       <input type="email" formControlName="email" placeholder="Email"
              class="w-full p-2 rounded bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-800" />
@@ -42,6 +22,33 @@
             class="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2 rounded">
       Iniciar sesión
     </button>
+
+    <div class="md:flex justify-center gap-3 pb-2 grid grid-cols-3 place-items-center">
+      <!-- PA -->
+      <button (click)="quickLogin('goes@gmail.com', '123456')" class="rounded-full flex items-center justify-center">
+        <img class="rounded-full w-10 h-10 hover:scale-105 transition-transform" src="https://vzqiluwkmitkspcsliqa.supabase.co/storage/v1/object/public/perfiles/profile/1749349421532-rodrygo_goes.png" alt="Foto paciente">
+      </button> 
+      <button (click)="quickLogin('melo@gmail.com', '123456')" class="rounded-full flex items-center justify-center">
+        <img class="rounded-full w-10 h-10 hover:scale-105 transition-transform" src="https://vzqiluwkmitkspcsliqa.supabase.co/storage/v1/object/public/perfiles/profile/1749403230032-melo.jpg" alt="Foto paciente">
+      </button>
+      <button (click)="quickLogin('melo@gmail.com', '123456')" class="rounded-full flex items-center justify-center">
+        <img class="rounded-full w-10 h-10 hover:scale-105 transition-transform" src="https://vzqiluwkmitkspcsliqa.supabase.co/storage/v1/object/public/perfiles/profile/1749654432081-PXL_20250608_014921280.jpg" alt="Foto paciente">
+      </button>
+
+      <!-- ESPECIALISTA -->
+      <button (click)="quickLogin('jpbushin@gmail.com', '123456')" class="rounded-full flex items-center justify-center">
+        <img class="rounded-full w-10 h-10 hover:scale-105 transition-transform" src="https://vzqiluwkmitkspcsliqa.supabase.co/storage/v1/object/public/perfiles/profile/1749399204406-foto_kinesiologo.webp" alt="Foto paciente">
+      </button>
+    
+      <button (click)="quickLogin('9julian@gmail.com', '181222')" class="rounded-full flex items-center justify-cente">
+        <img class="rounded-full w-12 h-12 hover:scale-105 transition-transform" src="https://vzqiluwkmitkspcsliqa.supabase.co/storage/v1/object/public/perfiles/profile/1749398630187-9julian_alvarez.jpg" alt="Foto admin">
+      </button>
+
+      <!-- AD -->
+      <button (click)="quickLogin('jpcortez@gmail.com', 'jpbushin')" class="rounded-full flex items-center justify-center">
+        <img class="rounded-full w-12 h-12 hover:scale-105 transition-transform" src="https://vzqiluwkmitkspcsliqa.supabase.co/storage/v1/object/public/perfiles/profile/1749780243494-1raFoto.jpg" alt="Foto admin">
+      </button>
+    </div>
 
     <p class="mt-4 text-sm text-gray-700">
       ¿Primera vez que ingresás?

@@ -4,7 +4,7 @@ import { CardsComponent } from "../../components/home-componenets/cards/cards.co
 import { SeparatorComponent } from "../../components/home-componenets/separator/separator.component";
 import { DataInformationComponent } from "../../components/home-componenets/data-information/data-information.component";
 import { DatabaseService } from '../../services/database.service';
-import { ClinicaServices } from '../../classes/clinica-services';
+import { pageImages } from '../../classes/pageImage';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -16,12 +16,12 @@ import { AuthService } from '../../services/auth.service';
 export class HomeComponent {
   db = inject(DatabaseService);
   auth = inject(AuthService);
-  clinica_services: ClinicaServices[] = [];
+  page_images: pageImages[] = [];
   isLoading = true;
   
   async ngOnInit() {
     try {
-      this.clinica_services = await this.db.getClinicaServices();
+      this.page_images = await this.db.getPageImages();
     } catch (error) {
       console.error('Error fetching clinica services:', error);
     } finally {

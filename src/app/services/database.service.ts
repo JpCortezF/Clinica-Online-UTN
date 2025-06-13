@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { ClinicaServices } from '../classes/clinica-services';
+import { pageImages } from '../classes/pageImage';
 import { Patient, Specialist } from '../classes/user';
 import { AuthService } from './auth.service';
 import { Appointment } from '../interfaces/appointment';
@@ -12,7 +12,7 @@ import { PatientProfileResponse } from '../interfaces/PatientProfile';
 export class DatabaseService {
   sb = inject(SupabaseService);
   auth = inject(AuthService);
-  private servicesCache: ClinicaServices[] | null = null;
+  private imagesCache: pageImages[] | null = null;
   
   // ==================== USERS ====================
 
@@ -474,12 +474,12 @@ export class DatabaseService {
     return data.office_hours;
   }
 
-  // ==================== SERVICES ====================
-  async getClinicaServices(): Promise<ClinicaServices[]> {
-    if (this.servicesCache) return this.servicesCache;
+  // ==================== PAGE IMAGES ====================
+  async getPageImages(): Promise<pageImages[]> {
+    if (this.imagesCache) return this.imagesCache;
 
-    const { data } = await this.sb.supabase.from('clinica_services').select('*').order('id', { ascending: true });
-    this.servicesCache = data?.map(s => new ClinicaServices(s)) || [];
-    return this.servicesCache;
+    const { data } = await this.sb.supabase.from('page_images').select('*').order('id', { ascending: true });
+    this.imagesCache = data?.map(s => new pageImages(s)) || [];
+    return this.imagesCache;
   }
 }

@@ -23,7 +23,6 @@ export class AppComponent {
   async ngOnInit() {
     initFlowbite();
     await this.auth.authReady;
-
     const user = await this.auth.getLoggedUserData();
     if (user) {
       this.userSession.setUser(user);

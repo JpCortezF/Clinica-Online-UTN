@@ -7,10 +7,10 @@
   }@if(!isLoading) {
     <div class="flex" id="services-section">
       <div class="mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center items-center">
-        @for(service of clinica_services; track service.id) {
+        @for(image of page_images; track image.id) {
           <app-cards
-            [url_img]="service.url_img"
-            [description]="service.description">
+            [url_img]="image.url_img"
+            [description]="image.description">
           </app-cards>
         }
       </div>

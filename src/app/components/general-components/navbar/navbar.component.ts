@@ -67,6 +67,14 @@ export class NavbarComponent {
       }
   }
 
+  goToUserSection() {
+    if (this.user) {
+      this.userSession.setUser(this.user);
+      this.router.navigate(['/user-section']);
+    }
+  }
+
+
   logout() {
     this.auth.logout().then(() => {
       this.user = null;
