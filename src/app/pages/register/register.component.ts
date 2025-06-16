@@ -2,7 +2,7 @@ import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { CommonModule } from '@angular/common';
-import { Patient, Specialist } from '../../classes/user';
+import { Patient, Specialist, User } from '../../classes/user';
 import { SupabaseService } from '../../services/supabase.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -19,7 +19,7 @@ export class RegisterComponent {
   sb = inject(SupabaseService);
   auth = inject(AuthService);
   router = inject(Router);
-  userType!: 'patient' | 'specialist';
+  userType!: 'patient' | 'specialist' | 'admin';
   form_register!: FormGroup;
   profileImageFile: File | null = null;
   secondProfileImageFile: File | null = null;
@@ -35,15 +35,15 @@ export class RegisterComponent {
   constructor(private fb: FormBuilder, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-  this.route.paramMap.subscribe(params => {
-    const type = params.get('type');
-    if (type === 'patient' || type === 'specialist') {
-      this.userType = type;
-      this.loadSpecialties();
-      this.initForm();
-    }
-  });
-}
+    this.route.paramMap.subscribe(params => {
+      const type = params.get('type');
+      if (type === 'patient' || type === 'specialist' || type === 'admin') {
+        this.userType = type;
+        this.loadSpecialties();
+        this.initForm();
+      }
+    });
+  }
 
   async loadSpecialties() {
     this.allSpecialties = await this.db.getSpecialties();
@@ -126,7 +126,6 @@ export class RegisterComponent {
 
     const isFormInvalid = this.form_register.invalid;
     const isImageMissing = !this.profileImageFile || (this.userType === 'patient' && !this.secondProfileImageFile);
-    console.log(this.profileImageFile, this.secondProfileImageFile);
     if (isFormInvalid || isImageMissing) return;
 
     let profileUrl = '';
@@ -150,14 +149,14 @@ export class RegisterComponent {
       secondUrl = await this.db.uploadImage(this.secondProfileImageFile!, 'second');
 
       const session = await this.sb.supabase.auth.getSession();
-
       const auth_id = session.data.session?.user?.id;
       if (auth_id) {
         await this.db.updateImages(auth_id, profileUrl, secondUrl);
         const updatedUser = await this.auth.getLoggedUserData();
         this.auth.setCurrentUser(updatedUser);
       }
-    } else {
+
+    } else if (this.userType === 'specialist') {
       const specialist = new Specialist(
         this.form_register.value.first_name,
         this.form_register.value.last_name,
@@ -179,6 +178,27 @@ export class RegisterComponent {
         const updatedUser = await this.auth.getLoggedUserData();
         this.auth.setCurrentUser(updatedUser);
       }
+
+    } else if (this.userType === 'admin') {
+      const profileUrlTemp = await this.db.uploadImage(this.profileImageFile!, 'profile');
+      const admin = new User(
+        this.form_register.value.first_name,
+        this.form_register.value.last_name,
+        this.form_register.value.age,
+        this.form_register.value.dni,
+        this.form_register.value.email,
+        this.form_register.value.password,
+        profileUrlTemp,
+        'admin'
+      );
+      await this.db.registerAdmin(admin);
+
+      const session = await this.sb.supabase.auth.getSession();
+      const auth_id = session.data.session?.user?.id;
+      if (auth_id) {
+        await this.db.updateImages(auth_id, profileUrlTemp);
+        // NO seteamos el usuario ni lo logueamos
+      }
     }
 
     this.form_register.reset();
@@ -188,7 +208,8 @@ export class RegisterComponent {
 
     this.auth.currentUser$.pipe(take(1)).subscribe(user => {
       if (user) {
-        this.router.navigate(['/']);
+        const redirectPath = this.userType === 'admin' ? '/account' : '/';
+        this.router.navigate([redirectPath]);
       }
     });
   }

@@ -32,7 +32,7 @@ export class NavbarComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
-      setTimeout(() => initFlowbite(), 300);
+      setTimeout(() => initFlowbite(), 100);
     });
   }
 
@@ -74,6 +74,12 @@ export class NavbarComponent {
     }
   }
 
+  goToUserRegistration() {
+    if (this.user) {
+      this.userSession.setUser(this.user);
+      this.router.navigate(['/account']);
+    }
+  }
 
   logout() {
     this.auth.logout().then(() => {

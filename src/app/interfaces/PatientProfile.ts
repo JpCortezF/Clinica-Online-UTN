@@ -3,6 +3,7 @@ export interface PatientProfileResponse {
   first_name: string;
   last_name: string;
   age: number;
+  email: string;
   dni: string;
   profile_image_url: string;
   patients: {

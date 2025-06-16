@@ -17,7 +17,6 @@ export class PatientProfileComponent {
 
   user: any = null;
   patient: any = null;
-  userEmail: string | null = null;
   isLoading = true;
 
   async ngOnInit() {
@@ -26,7 +25,6 @@ export class PatientProfileComponent {
     }
 
     this.user = this.userSession.getUser();
-    this.userEmail = await this.auth.getCurrentUserEmail();
 
     if (this.user?.user_type === 'patient') {
       this.patient  = await this.db.getPatientProfileData(this.user.id);
