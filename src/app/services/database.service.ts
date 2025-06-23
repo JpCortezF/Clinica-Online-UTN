@@ -519,6 +519,18 @@ export class DatabaseService {
     return data.office_hours;
   }
 
+  async submitSurvey(appointmentId: number, comment: string): Promise<boolean> {
+    const { error } = await this.sb.supabase
+      .from('appointments')
+      .insert({ survey_completed: true, review: comment });
+
+    if (error) {
+      console.error('Error al enviar la encuesta:', error);
+      return false;
+    }
+    return true;
+  }
+  
   // ==================== PAGE IMAGES ====================
   async getPageImages(): Promise<pageImages[]> {
     if (this.imagesCache) return this.imagesCache;

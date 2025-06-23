@@ -95,14 +95,14 @@
           </td>
 
           <td class="px-4 py-3 whitespace-nowrap space-x-2">
-            <ng-container *ngIf="appt.status !== 'realizado' && appt.status !== 'cancelado'">
+            <ng-container *ngIf="appt.status === 'aceptado'">
               <button (click)="cancelAppointment(appt.id)"
                       class="text-red-600 hover:text-red-800 px-3 py-1 rounded-full hover:bg-red-50 transition-colors text-sm flex items-center"
                       title="Cancelar turno">
                 <i class="fas fa-times-circle mr-1"></i> Cancelar
               </button>
             </ng-container>
-            <ng-container *ngIf="appt.status === 'cancelado'">
+            <ng-container *ngIf="appt.status === 'cancelado' || appt.status === 'rechazado'">
               <button (click)="deleteAppointment(appt.id)"
                       class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition-colors"
                       title="Eliminar turno">
@@ -142,7 +142,6 @@
         </tr>
       </ng-container>
 
-
       <ng-template #noAppointments>
         <tr>
           <td colspan="8" class="px-4 py-8 text-center">
@@ -154,6 +153,13 @@
           </td>
         </tr>
       </ng-template>
+
+      <app-modal-view
+        *ngIf="showReviewModal"
+        [title]="'Reseña del especialista'"
+        [content]="currentReview"
+        (close)="showReviewModal = false">
+      </app-modal-view>
     </tbody>
   </table>
 </div>
