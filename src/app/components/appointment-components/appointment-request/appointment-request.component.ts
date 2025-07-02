@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, Input } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatabaseService } from '../../../services/database.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-appointment-request',
@@ -12,6 +13,7 @@ import { DatabaseService } from '../../../services/database.service';
 export class AppointmentRequestComponent {
   @Input() user!: any;
   db = inject(DatabaseService);
+  router = inject(Router);
   appointmentForm!: FormGroup;
   specialties: { id: number, name: string }[] = [];
   specialists: any[] = [];
@@ -45,12 +47,18 @@ export class AppointmentRequestComponent {
     });
   }
 
+  selectSpecialty(id: number) {
+    this.appointmentForm.get('specialtyId')?.setValue(id);
+    this.appointmentForm.get('specialtyId')?.markAsTouched();
+  }
+
+
   async loadSpecialties() {
     this.specialties = await this.db.getSpecialties();
   }
 
   async loadSpecialists(specialty_id: number) {
-    this.specialists = await this.db.getSpecialistsBySpecialtyId(specialty_id);
+    this.specialists = await this.db.getSpecialistsBySpecialty(specialty_id);
   }
 
   async loadDates(specialistId: number) {
@@ -103,6 +111,8 @@ export class AppointmentRequestComponent {
       return;
     }
 
+    const takenTimes = await this.db.getTakenTimesForDate(specialistId, dateStr);
+
     const times: string[] = [];
     let [startH, startM] = daySchedule.start.split(':').map(Number);
     let [endH, endM] = daySchedule.end.split(':').map(Number);
@@ -112,14 +122,50 @@ export class AppointmentRequestComponent {
 
     const endLimit = new Date(date);
     endLimit.setHours(endH, endM, 0, 0);
-    endLimit.setMinutes(endLimit.getMinutes() - 30); // Último turno válido
+    endLimit.setMinutes(endLimit.getMinutes() - 30);
+
+    const now = new Date();
+    const argNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+    const isToday = date.toDateString() === argNow.toDateString();
 
     while (start <= endLimit) {
-      times.push(start.toTimeString().slice(0, 5));
+      const timeStr = start.toTimeString().slice(0, 5); // "HH:mm"
+
+      const isTaken = takenTimes.includes(timeStr);
+      const isPast = isToday && start < argNow;
+
+      if (!isTaken && !isPast) {
+        times.push(timeStr);
+      }
+
       start.setMinutes(start.getMinutes() + 30);
     }
 
     this.availableTimes = times;
+  }
+
+  formatTime(t: string): string {
+    const dateStr = this.appointmentForm.get('date')?.value;
+    if (!dateStr) return t;
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hour, minute] = t.split(':').map(Number);
+
+    const date = new Date(year, month - 1, day, hour, minute);
+
+    const formattedDate = date.toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+
+    const formattedTime = date.toLocaleTimeString('es-AR', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${formattedDate} ${formattedTime}`;
   }
 
   async onSubmit() {
@@ -143,6 +189,7 @@ export class AppointmentRequestComponent {
       await this.db.insertAppointment(patientId, form.specialistId, form.specialtyId, appointmentDate);
 
       console.log('¡Turno solicitado con éxito!');
+      this.router.navigate(['/appointment']);
       this.appointmentForm.reset(); 
     } catch (error) {
       console.error('Error al solicitar turno:', error);

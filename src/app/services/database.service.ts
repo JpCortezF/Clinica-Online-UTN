@@ -266,6 +266,32 @@ export class DatabaseService {
     return specialists;
   }
 
+  
+  async getSpecialistsBySpecialty(specialtyId: number): Promise<any[]> {
+    const { data, error } = await this.sb.supabase
+      .from('specialists')
+      .select(`
+        id,
+        office_hours,
+        status,
+        user:users (
+          first_name,
+          last_name,
+          profile_image_url
+        ),
+        specialist_specialties!inner (
+          specialty_id
+        )
+      `)
+      .eq('status', 'habilitado')
+      .eq('specialist_specialties.specialty_id', specialtyId)
+      .not('office_hours', 'is', null);
+      
+    if (error) throw error;
+
+    return data || [];
+  }
+
   async updateSpecialistStatus(specialistId: number, status: 'pendiente' | 'habilitado' | 'rechazado'): Promise<void> {
     const { error } = await this.sb.supabase
       .from('specialists')
@@ -355,6 +381,49 @@ export class DatabaseService {
     });
   }
 
+  
+  async getSpecialistsAttendedByPatient(patientId: number): Promise<any[]> {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select(`specialist_id, specialist: specialist_id (
+          id,
+          user: users (
+            first_name,
+            last_name
+          )
+        )
+      `)
+      .eq('patient_id', patientId)
+      .eq('status', 'realizado')
+      .order('appointment_date', { ascending: false });
+    
+    if (error) throw error;
+    const unique = new Map<number, any>();
+
+    for (const item of data || []) {
+      const specialist = item.specialist?.[0];
+      if (specialist && !unique.has(specialist.id)) {
+        unique.set(specialist.id, {
+          id: specialist.id,
+          name: `${specialist.user?.[0]?.first_name} ${specialist.user?.[0]?.last_name}`
+        });
+      }
+    }
+    return Array.from(unique.values());
+  }
+
+  async getAppointmentsForPatientWithSpecialist(patientId: number, specialistId: number) {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select(`appointment_date, review`)
+      .eq('patient_id', patientId)
+      .eq('specialist_id', specialistId)
+      .eq('status', 'realizado');
+
+    if (error) throw error;
+    return data || [];
+  }
+  
   async checkAppointmentConflict(specialistId: number, dateTimeISO: string): Promise<boolean> {
     const { data, error } = await this.sb.supabase
       .from('appointments')
@@ -517,6 +586,23 @@ export class DatabaseService {
 
     if (error) throw error;
     return data.office_hours;
+  }
+
+  async getTakenTimesForDate(specialistId: number, dateStr: string): Promise<string[]> {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select('appointment_date')
+      .eq('specialist_id', specialistId)
+      .in('status', ['pendiente', 'realizado', 'aceptado'])
+      .gte('appointment_date', `${dateStr}T00:00:00`)
+      .lt('appointment_date', `${dateStr}T23:59:59`);
+
+    if (error) throw error;
+
+    return (data || []).map(appt => {
+      const date = new Date(appt.appointment_date);
+      return date.toTimeString().slice(0, 5); // "HH:mm"
+    });
   }
 
   async submitSurvey(appointmentId: number, comment: string): Promise<boolean> {

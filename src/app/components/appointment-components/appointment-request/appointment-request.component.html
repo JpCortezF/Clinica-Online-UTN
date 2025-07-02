@@ -9,17 +9,35 @@
         <label class="block text-white font-medium mb-2">
           <i class="fas fa-stethoscope mr-2"></i>Especialidad Médica
         </label>
-        <select 
-          formControlName="specialtyId"
-          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-          [ngClass]="{'border-red-400': appointmentForm.get('specialtyId')?.invalid && appointmentForm.get('specialtyId')?.touched}">
-          <option value="" disabled selected>Seleccione una especialidad</option>
-          <option *ngFor="let spec of specialties" [value]="spec.id">
-            {{ spec.name }}
-          </option>
-        </select>
+
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          <div *ngFor="let spec of specialties"
+              class="cursor-pointer group"
+              (click)="selectSpecialty(spec.id)">
+
+            <div class="h-10 flex items-center justify-center text-white font-semibold text-sm text-center mb-2">
+              {{ spec.name }}
+            </div>
+
+            <div class="w-[50%] max-w-xs mx-auto relative">
+              <div
+                class="aspect-square rounded-lg overflow-hidden shadow transition-transform duration-300 relative"
+                [ngClass]="{
+                  'scale-105': appointmentForm.value.specialtyId === spec.id
+                }">
+                
+                <img [src]="'/imagen_especialidad.webp'" alt="Especialidad"
+                    class="w-full h-full object-cover" />
+
+                <div *ngIf="appointmentForm.value.specialtyId !== spec.id"
+                    class="absolute inset-0 bg-black/40 rounded-lg pointer-events-none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div *ngIf="appointmentForm.get('specialtyId')?.invalid && appointmentForm.get('specialtyId')?.touched" 
-             class="text-red-200 text-sm mt-1">
+            class="text-red-200 text-sm mt-2">
           Por favor seleccione una especialidad
         </div>
       </div>
@@ -31,20 +49,29 @@
         </label>
 
         <ng-container *ngIf="specialists.length > 0; else noSpecialists">
-          <select 
-            formControlName="specialistId"
-            class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-            [ngClass]="{
-              'border-red-400': appointmentForm.get('specialistId')?.invalid && appointmentForm.get('specialistId')?.touched
-            }">
-            <option value="" disabled selected>Seleccione un profesional</option>
-            <option *ngFor="let sp of specialists" [value]="sp.id">
-              Dr./Dra. {{ sp.user.first_name }} {{ sp.user.last_name }}
-            </option>
-          </select>
-          <div *ngIf="appointmentForm.get('specialistId')?.invalid && appointmentForm.get('specialistId')?.touched" 
-              class="text-red-200 text-sm mt-1">
-            Por favor seleccione un profesional
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            <div *ngFor="let sp of specialists"
+                class="cursor-pointer group"
+                (click)="appointmentForm.get('specialistId')?.setValue(sp.id)">          
+              <div class="w-[60%] max-w-xs mx-auto relative">
+                <div
+                  class="aspect-square rounded-lg overflow-hidden shadow transition-transform duration-300 relative"
+                  [ngClass]="{
+                    'scale-105': appointmentForm.value.specialistId === sp.id
+                  }">
+
+                  <img [src]="sp.user.profile_image_url || '/default-profile.png'" alt="Profesional"
+                      class="w-full h-full object-cover" />
+
+                  <div *ngIf="appointmentForm.value.specialistId !== sp.id"
+                      class="absolute inset-0 bg-black/40 rounded-lg pointer-events-none"></div>
+                </div>
+              </div>
+
+              <div class="w-full h-10 flex items-center justify-center text-white text-sm font-semibold text-center mt-2 truncate">
+                Dr./Dra. <br>{{ sp.user.first_name }} {{ sp.user.last_name }}
+              </div>
+            </div>
           </div>
         </ng-container>
 
@@ -53,6 +80,11 @@
             No hay profesionales habilitados para esta especialidad.
           </p>
         </ng-template>
+
+        <div *ngIf="appointmentForm.get('specialistId')?.invalid && appointmentForm.get('specialistId')?.touched" 
+            class="text-red-200 text-sm mt-2">
+          Por favor seleccione un profesional
+        </div>
       </div>
       
       <!-- Fecha -->
@@ -76,25 +108,32 @@
       </div>
 
       <!-- Horario -->
-      <div *ngIf="availableTimes.length > 0" class="mb-8 animate-fade-in">
-        <label class="block text-white font-medium mb-2">
-          <i class="far fa-clock mr-2"></i>Horario Disponible
-        </label>
-        <select 
-          formControlName="time"
-          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-          [ngClass]="{'border-red-400': appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched}">
-          <option value="" disabled selected>Seleccione un horario</option>
-          <option *ngFor="let t of availableTimes" [value]="t">
-            {{ t }}
-          </option>
-        </select>
-        <div *ngIf="appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched" 
-             class="text-red-200 text-sm mt-1">
-          Por favor seleccione un horario
+      <ng-container *ngIf="availableTimes.length > 0; else noAvailableTimes">
+        <div class="mb-8 animate-fade-in">
+          <label class="block text-white font-medium mb-2">
+            <i class="far fa-clock mr-2"></i>Horario Disponible
+          </label>
+          <select 
+            formControlName="time"
+            class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+            [ngClass]="{'border-red-400': appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched}">
+            <option value="" disabled selected>Seleccione un horario</option>
+            <option *ngFor="let t of availableTimes" [value]="t">
+              {{ formatTime(t) }}
+            </option>
+          </select>
+          <div *ngIf="appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched" 
+              class="text-red-200 text-sm mt-1">
+            Por favor seleccione un horario
+          </div>
         </div>
-      </div>
-
+      </ng-container>
+      
+      <ng-template #noAvailableTimes>
+        <div *ngIf="appointmentForm.get('date')?.value" class="mb-8 animate-fade-in text-red-200 text-sm mt-1">
+            No hay horarios disponibles para la fecha seleccionada.
+          </div>
+      </ng-template>
       <!-- Botón de submit -->
       <button 
         type="submit"
