@@ -352,9 +352,11 @@ export class DatabaseService {
         appointment_date,
         status,
         review,
+        specialist_review,
         specialties(name),
         specialists(user:users(first_name, last_name)),
-        survey_completed
+        survey_completed,
+        rating
       `)
       .eq('patient_id', patientId);
 
@@ -371,12 +373,14 @@ export class DatabaseService {
         appointment_date: a.appointment_date,
         status: a.status,
         review: a.review,
+        specialist_review: a.specialist_review,
         patient_name: '',
         specialist_name: specialistUser
           ? `${specialistUser.first_name} ${specialistUser.last_name}`
           : 'Sin nombre',
         specialty_name: specialtyName,
-        survey_completed: a.survey_completed
+        survey_completed: a.survey_completed,
+        rating: a.rating
       };
     });
   }
@@ -465,7 +469,7 @@ export class DatabaseService {
     const { data, error } = await this.sb.supabase
       .from('appointments')
       .select(`
-        id, request_message, request_date, appointment_date, status, review, survey_completed,
+        id, request_message, request_date, appointment_date, status, review, specialist_review, survey_completed, rating,
         specialist:specialists(id, user:users(first_name, last_name)),
         specialty:specialties(name)
       `)
@@ -484,7 +488,9 @@ export class DatabaseService {
       appointment_date: a.appointment_date,
       status: a.status,
       review: a.review,
+      specialist_review: a.specialist_review,
       survey_completed: a.survey_completed,
+      rating: a.rating,
       specialist_name: `${a.specialist.user.first_name} ${a.specialist.user.last_name}`,
       patient_name: '',
       specialty_name: a.specialty.name,
@@ -506,7 +512,7 @@ export class DatabaseService {
     const { data, error } = await this.sb.supabase
       .from('appointments')
       .select(`
-        id, request_message, request_date, appointment_date, status, review,
+        id, request_message, request_date, appointment_date, status, review, specialist_review,
         patient:patients(id, user:users(first_name, last_name)),
         specialty:specialties(name)
       `)
@@ -525,19 +531,26 @@ export class DatabaseService {
       appointment_date: a.appointment_date,
       status: a.status,
       review: a.review,
+      specialist_review: a.specialist_review,
       survey_completed: a.survey_completed ?? false,
+      rating: a.rating,
       specialist_name: '',
       patient_name: `${a.patient.user.first_name} ${a.patient.user.last_name}`,
       specialty_name: a.specialty.name,
     }));
   }
 
-  async updateAppointmentStatus(id: number, status: string, cancel_comment?: string): Promise<boolean> {
-    const { error } = await this.sb.supabase
-    .from('appointments').update({ status, request_message: cancel_comment}).eq('id', id).single();
+  async updateAppointmentStatus(appointmentId: number, status: string, reason?: string): Promise<boolean> {
+    const updateData: any = { status };
+    if (reason) updateData.cancellation_reason = reason;
 
-    if(error){
-      console.error(`Error al actualizar el turno a ${status}:`, error);
+    const { error } = await this.sb.supabase
+      .from('appointments')
+      .update(updateData)
+      .eq('id', appointmentId);
+
+    if (error) {
+      console.error('Error al actualizar estado del turno:', error);
       return false;
     }
     return true;
@@ -605,10 +618,15 @@ export class DatabaseService {
     });
   }
 
-  async submitSurvey(appointmentId: number, comment: string): Promise<boolean> {
+  async submitSurvey(appointmentId: number, comment: string, rating: number): Promise<boolean> {
     const { error } = await this.sb.supabase
       .from('appointments')
-      .insert({ survey_completed: true, review: comment });
+      .update({ 
+        survey_completed: true,
+        review: comment,
+        rating: rating
+      })
+      .eq('id', appointmentId);
 
     if (error) {
       console.error('Error al enviar la encuesta:', error);
@@ -616,7 +634,24 @@ export class DatabaseService {
     }
     return true;
   }
-  
+
+  async rateAppointment(appointmentId: number, comment: string, rating: number): Promise<boolean> {
+    const { error } = await this.sb.supabase
+      .from('appointments')
+      .update({ 
+        rating: rating,
+        review: comment,
+        survey_completed: true
+      })
+      .eq('id', appointmentId);
+
+    if (error) {
+      console.error('Error al calificar:', error);
+      return false;
+    }
+    return true;
+  }
+
   // ==================== PAGE IMAGES ====================
   async getPageImages(): Promise<pageImages[]> {
     if (this.imagesCache) return this.imagesCache;

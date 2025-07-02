@@ -103,21 +103,21 @@
           </td>
           <td class="px-4 py-3 whitespace-nowrap space-y-1 text-sm">
             <ng-container *ngIf="appt.status === 'pendiente'">
-              <button (click)="acceptAppointment(appt.id)" class="text-green-700 hover:underline inline-flex items-center gap-1">
+              <button (click)="openAcceptModal(appt.id)" class="text-green-700 hover:underline inline-flex items-center gap-1">
                 <i class="fas fa-check-circle"></i> Aceptar
               </button>
               <br />
-              <button (click)="rejectAppointment(appt.id)" class="text-red-700 hover:underline inline-flex items-center gap-1">
+              <button (click)="openRejectModal(appt.id)" class="text-red-700 hover:underline inline-flex items-center gap-1">
                 <i class="fas fa-times-circle"></i> Rechazar
               </button>
             </ng-container>
 
             <ng-container *ngIf="appt.status === 'aceptado'">
-              <button (click)="finalizeAppointment(appt.id)" class="text-blue-700 hover:underline inline-flex items-center gap-1">
+              <button (click)="openFinalizeModal(appt.id)" class="text-blue-700 hover:underline inline-flex items-center gap-1">
                 <i class="fas fa-clipboard-check"></i> Finalizar
               </button>
               <br />
-              <button (click)="cancelAppointment(appt.id)" class="text-red-700 hover:underline inline-flex items-center gap-1">
+              <button (click)="openCancelModal(appt.id)" class="text-red-700 hover:underline inline-flex items-center gap-1">
                 <i class="fas fa-ban"></i> Cancelar
               </button>
             </ng-container>
@@ -145,6 +145,20 @@
           </td>
         </tr>
       </ng-template>
+
+      <app-modal-view
+        *ngIf="modalConfig.isVisible"
+        [title]="modalConfig.title"
+        [description]="modalConfig.description"
+        [content]="modalConfig.content"
+        [showInput]="modalConfig.showInput"
+        [inputLabel]="modalConfig.inputLabel"
+        [showConfirmButton]="modalConfig.showConfirmButton"
+        [showCancelButton]="modalConfig.showConfirmButton"
+        [confirmButtonText]="modalConfig.confirmButtonText"
+        (close)="closeModal()"
+        (confirm)="handleModalConfirm($event)">
+      </app-modal-view>
     </tbody>
   </table>
 </div>

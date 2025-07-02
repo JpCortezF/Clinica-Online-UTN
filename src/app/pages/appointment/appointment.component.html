@@ -32,7 +32,7 @@
     <!-- Contenido dinámico -->
     <div class="transition-all duration-300 ease-in-out">
       <ng-container *ngIf="viewMode === 'form'">
-        <app-appointment-request *ngIf="user" [user]="user" class="block animate-fadeIn"></app-appointment-request>
+        <app-appointment-request *ngIf="user" [user]="user" (appointmentSubmitted)="viewMode = 'list'" class="block animate-fadeIn"></app-appointment-request>
       </ng-container>
 
       <ng-container *ngIf="viewMode === 'list' && isPatient">

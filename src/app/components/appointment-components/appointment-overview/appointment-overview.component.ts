@@ -3,8 +3,8 @@ import { Appointment } from '../../../interfaces/appointment';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../../services/database.service';
-import { ModalPromptComponent } from '../modal-prompt/modal-prompt.component';
 import { ModalViewComponent } from '../modal-view/modal-view.component';
+import { Specialist } from '../../../classes/user';
 
 @Component({
   selector: 'app-appointment-overview',
@@ -19,15 +19,25 @@ export class AppointmentOverviewComponent {
   searchTerm = '';
   filterStatus: 'pendiente' | 'realizado' | 'cancelados' | 'aceptado' | 'rechazado' = 'pendiente';
 
-  showModal = false;
-  modalTitle = '';
-  modalDescription = '';
-  modalAction: 'cancel' | 'survey' | null = null;
-  modalAppointmentId: number | null = null;
-
   showReviewModal = false;
   currentReview: string = '';
 
+  modalConfig = {
+    isVisible: false,
+    title: '',
+    description: '',
+    specialistName: '',
+    content: '',
+    showInput: false,
+    inputLabel: '',
+    showRating: false,
+    currentRating: 0,
+    showConfirmButton: false,
+    confirmButtonText: 'Confirmar',
+    action: null as 'cancel' | 'survey' | 'rate' | null,
+    appointmentId: null as number | null
+  };
+  
   ngOnChanges(changes: SimpleChanges) {
     if (changes['user']?.currentValue) {
       const user = changes['user'].currentValue;
@@ -37,6 +47,7 @@ export class AppointmentOverviewComponent {
 
   private async loadAppointments(userId: number) {
     this.appointments = await this.db.getAppointmentsByPatient(userId);
+    console.log('Citas cargadas:', this.appointments);
   }
 
   filteredAppointments(): Appointment[] {
@@ -59,16 +70,26 @@ export class AppointmentOverviewComponent {
   }
 
   async cancelAppointment(appointmentId: number) {
-    this.modalTitle = 'Cancelar Turno';
-    this.modalDescription = 'Por favor ingrese el motivo de la cancelación:';
-    this.modalAction = 'cancel';
-    this.modalAppointmentId = appointmentId;
-    this.showModal = true;
+    this.modalConfig = {
+      isVisible: true,
+      title: 'Cancelar Turno',
+      description: 'Por favor ingrese el motivo de la cancelación:',
+      specialistName: this.appointments.find(appt => appt.id === appointmentId)?.specialist_name || '',
+      content: '',
+      showInput: true,
+      inputLabel: 'Motivo',
+      showRating: false,
+      currentRating: 0,
+      showConfirmButton: true,
+      confirmButtonText: 'Confirmar cancelación',
+      action: 'cancel',
+      appointmentId: appointmentId
+    };
   }
 
-  private async reloadAppointments() {
+  private async reloadAppointments(): Promise<void> {
     if (this.user?.id) {
-      this.appointments = await this.db.getAppointmentsBySpecialist(this.user.id);
+      this.appointments = await this.db.getAppointmentsByPatient(this.user.id);
     }
   }
 
@@ -78,8 +99,21 @@ export class AppointmentOverviewComponent {
   }
 
   rateAppointment(appointmentId: number) {
-    // lógica para calificar
-    console.log('Calificar atención:', appointmentId);
+    this.modalConfig = {
+      isVisible: true,
+      title: 'Calificar atención médica',
+      description: '¿Cómo calificarías la atención recibida?',
+      specialistName: this.appointments.find(appt => appt.id === appointmentId)?.specialist_name || '',
+      content: '',
+      showInput: true,
+      inputLabel: 'Comentario (opcional)',
+      showRating: true,
+      currentRating: 0,
+      showConfirmButton: true,
+      confirmButtonText: 'Enviar calificación',
+      action: 'rate',
+      appointmentId: appointmentId
+    };
   }
 
   viewReview(review: string) {
@@ -88,36 +122,70 @@ export class AppointmentOverviewComponent {
   }
 
   completeSurvey(appointmentId: number) {
-    this.modalTitle = 'Completar Encuesta';
-    this.modalDescription = 'Ingrese su comentario o experiencia sobre el turno:';
-    this.modalAction = 'survey';
-    this.modalAppointmentId = appointmentId;
-    this.showModal = true;
+    this.modalConfig = {
+      isVisible: true,
+      title: 'Encuesta de satisfacción',
+      description: 'Por favor califica tu experiencia con el especialista:',
+      specialistName: this.appointments.find(appt => appt.id === appointmentId)?.specialist_name || '',
+      content: '',
+      showInput: true,
+      inputLabel: 'Comentarios adicionales',
+      showRating: true,
+      currentRating: 0,
+      showConfirmButton: true,
+      confirmButtonText: 'Enviar encuesta',
+      action: 'survey',
+      appointmentId: appointmentId
+    };
   }
 
-  handleModalConfirm(input: string) {
-    if (this.modalAction === 'cancel' && this.modalAppointmentId) {
-      this.db.updateAppointmentStatus(this.modalAppointmentId, 'cancelado', input).then(success => {
-        if (success) this.reloadAppointments();
-      });
-    } else if (this.modalAction === 'survey' && this.modalAppointmentId) {
-      this.db.submitSurvey(this.modalAppointmentId, input).then(success => {
-        if (success) this.reloadAppointments();
-      });
+  handleModalConfirm(input: string = '') {
+    const handleSuccess = async (success: boolean) => {
+      if (success) {
+        await this.reloadAppointments();
+      }
+      this.closeModal();
+    };
+
+    switch (this.modalConfig.action) {
+      case 'cancel':
+        this.db.updateAppointmentStatus(this.modalConfig.appointmentId!, 'cancelado', input
+        ).then(handleSuccess);
+        break;
+        
+      case 'survey':
+        this.db.submitSurvey(
+          this.modalConfig.appointmentId!, input, this.modalConfig.currentRating
+        ).then(handleSuccess);
+        break;
+        
+      case 'rate':
+        this.db.rateAppointment(
+          this.modalConfig.appointmentId!, input, this.modalConfig.currentRating
+        ).then(handleSuccess);
+        break;
     }
-
-    this.resetModal();
   }
 
-  handleModalCancel() {
-    this.resetModal();
+  closeModal() {
+    this.modalConfig = {
+      isVisible: false,
+      title: '',
+      description: '',
+      specialistName: '',
+      content: '',
+      showInput: false,
+      inputLabel: '',
+      showRating: false,
+      currentRating: 0,
+      showConfirmButton: false,
+      confirmButtonText: 'Confirmar',
+      action: null,
+      appointmentId: null
+    };
   }
 
-  private resetModal() {
-    this.showModal = false;
-    this.modalTitle = '';
-    this.modalDescription = '';
-    this.modalAction = null;
-    this.modalAppointmentId = null;
+  setRating(rating: number) {
+    this.modalConfig.currentRating = rating;
   }
 }

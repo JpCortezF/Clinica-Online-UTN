@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatabaseService } from '../../../services/database.service';
 import { Router } from '@angular/router';
@@ -19,7 +19,8 @@ export class AppointmentRequestComponent {
   specialists: any[] = [];
   availableDates: { label: string; value: string }[] = [];
   availableTimes: string[] = [];
-
+  @Output() appointmentSubmitted = new EventEmitter<void>();
+  
   constructor(private fb: FormBuilder){}
 
   async ngOnInit() {
@@ -70,12 +71,12 @@ export class AppointmentRequestComponent {
 
     for (let i = 0; i < 15; i++) {
       const date = new Date(today);
-      date.setDate(date.getDate() + i);
+      date.setDate(today.getDate() + i);
 
       const dayOfWeek = date.toLocaleDateString('es-AR', { weekday: 'long' }).toLowerCase();
 
       if (officeHours[dayOfWeek]) {
-        const value = date.toISOString().split('T')[0];
+        const value = date.toLocaleDateString('en-CA'); // ✅ formato YYYY-MM-DD sin desfase
         const label = date.toLocaleDateString('es-AR', {
           weekday: 'long',
           year: 'numeric',
@@ -99,11 +100,9 @@ export class AppointmentRequestComponent {
 
     const officeHours = await this.db.getOfficeHoursBySpecialistId(specialistId);
 
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // 👈 fecha local correcta
-
+    const date = new Date(`${dateStr}T00:00:00`);
     const dayOfWeek = date.toLocaleDateString('es-AR', { weekday: 'long' }).toLowerCase().trim();
-
+    
     const daySchedule = officeHours[dayOfWeek];
 
     if (!daySchedule) {
@@ -129,8 +128,7 @@ export class AppointmentRequestComponent {
     const isToday = date.toDateString() === argNow.toDateString();
 
     while (start <= endLimit) {
-      const timeStr = start.toTimeString().slice(0, 5); // "HH:mm"
-
+      const timeStr = start.toTimeString().slice(0, 5);
       const isTaken = takenTimes.includes(timeStr);
       const isPast = isToday && start < argNow;
 
@@ -189,8 +187,9 @@ export class AppointmentRequestComponent {
       await this.db.insertAppointment(patientId, form.specialistId, form.specialtyId, appointmentDate);
 
       console.log('¡Turno solicitado con éxito!');
-      this.router.navigate(['/appointment']);
-      this.appointmentForm.reset(); 
+      this.appointmentForm.reset();
+      this.appointmentSubmitted.emit();
+      
     } catch (error) {
       console.error('Error al solicitar turno:', error);
     }

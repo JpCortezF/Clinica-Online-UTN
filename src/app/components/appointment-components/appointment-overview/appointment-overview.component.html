@@ -55,13 +55,14 @@
         <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-user-md mr-2"></i>Especialista</th>
         <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-stethoscope mr-2"></i>Especialidad</th>
         <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-info-circle mr-2"></i>Estado</th>
-        <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-cog mr-2"></i>Acciones</th>
+        <th class="px-4 py-3 whitespace-nowrap">Acciones</th>
         <th class="px-4 py-3 whitespace-nowrap">Reseña</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
       <ng-container *ngIf="filteredAppointments().length > 0; else noAppointments">
         <tr *ngFor="let appt of filteredAppointments()" class="hover:bg-blue-50 transition-colors">
+          <!-- Columnas existentes -->
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             {{ appt.request_date | date:'dd/MM/yyyy' }}
           </td>
@@ -82,54 +83,55 @@
               'bg-yellow-100 text-yellow-800': appt.status === 'pendiente',
               'bg-blue-100 text-blue-800': appt.status === 'aceptado',
               'bg-green-100 text-green-800': appt.status === 'realizado',
-              'bg-red-100 text-red-800': appt.status === 'cancelado'
+              'bg-red-100 text-red-800': ['cancelado', 'rechazado'].includes(appt.status)
             }" class="px-2 py-1 rounded-full text-xs font-semibold">
               <i [ngClass]="{
                 'far fa-clock': appt.status === 'pendiente',
                 'fas fa-check': appt.status === 'aceptado',
                 'fas fa-check-double': appt.status === 'realizado',
-                'fas fa-ban': appt.status === 'cancelado'
+                'fas fa-ban': ['cancelado', 'rechazado'].includes(appt.status)
               }" class="mr-1"></i>
               {{ appt.status | titlecase }}
             </span>
           </td>
 
+          <!-- Columna de Acciones -->
           <td class="px-4 py-3 whitespace-nowrap space-x-2">
+            <!-- Cancelar turno -->
             <ng-container *ngIf="appt.status === 'aceptado'">
-              <button (click)="cancelAppointment(appt.id)"
-                      class="text-red-600 hover:text-red-800 px-3 py-1 rounded-full hover:bg-red-50 transition-colors text-sm flex items-center"
-                      title="Cancelar turno">
+              <button (click)="cancelAppointment(appt.id)" class="cancel-btn">
                 <i class="fas fa-times-circle mr-1"></i> Cancelar
               </button>
             </ng-container>
+
+            <!-- Eliminar turno -->
             <ng-container *ngIf="appt.status === 'cancelado' || appt.status === 'rechazado'">
-              <button (click)="deleteAppointment(appt.id)"
-                      class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition-colors"
-                      title="Eliminar turno">
+              <button (click)="deleteAppointment(appt.id)" class="delete-btn">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </ng-container>
 
-            <ng-container *ngIf="appt.status === 'realizado' && !appt.review">
-              <button (click)="rateAppointment(appt.id)"
-                      class="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50 transition-colors"
-                      title="Calificar atención">
-                <i class="fas fa-star"></i>
-              </button>
+            <!-- Calificar o mostrar rating -->
+            <ng-container *ngIf="appt.status === 'realizado' && appt.survey_completed && appt.rating">
+              <div class="inline-flex items-center bg-yellow-50 px-2 py-1 rounded-full text-yellow-700">
+                <span class="text-sm font-medium mr-1">{{appt.rating}}/5</span>
+                <i class="fas fa-star text-sm"></i>
+              </div>
             </ng-container>
 
+            <!-- Encuesta (solo si no está completada) -->
             <ng-container *ngIf="appt.status === 'realizado' && !appt.survey_completed">
-              <button (click)="completeSurvey(appt.id)"
-                      class="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 transition-colors"
-                      title="Completar encuesta">
+              <button (click)="completeSurvey(appt.id)" class="survey-btn">
                 <i class="fas fa-clipboard-list"></i>
+                <span class="underline ml-1">Encuesta</span>
               </button>
             </ng-container>
           </td>
 
+          <!-- Columna de Reseña -->
           <td class="px-4 py-3 whitespace-nowrap text-sm">
-            <ng-container *ngIf="appt.review; else noReview">
-              <button (click)="viewReview(appt.review!)"
+            <ng-container *ngIf="appt.specialist_review && appt.specialist_review !== 'Aún no disponible'; else noReview">
+              <button (click)="viewReview(appt.specialist_review)"
                       class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
                 <i class="fas fa-book-open"></i>
                 <span class="underline">Ver</span>
@@ -142,6 +144,7 @@
         </tr>
       </ng-container>
 
+      <!-- Mensaje cuando no hay turnos -->
       <ng-template #noAppointments>
         <tr>
           <td colspan="8" class="px-4 py-8 text-center">
@@ -154,11 +157,30 @@
         </tr>
       </ng-template>
 
+      <!-- Modales -->
       <app-modal-view
         *ngIf="showReviewModal"
         [title]="'Reseña del especialista'"
         [content]="currentReview"
         (close)="showReviewModal = false">
+      </app-modal-view>
+
+      <app-modal-view
+        *ngIf="modalConfig.isVisible"
+        [title]="modalConfig.title"
+        [description]="modalConfig.description"
+        [specialistName]="modalConfig.specialistName"
+        [content]="modalConfig.content"
+        [showInput]="modalConfig.showInput"
+        [inputLabel]="modalConfig.inputLabel"
+        [showRating]="modalConfig.showRating"
+        [currentRating]="modalConfig.currentRating"
+        [showConfirmButton]="modalConfig.showConfirmButton"
+        [showCancelButton]="modalConfig.showConfirmButton"
+        [confirmButtonText]="modalConfig.confirmButtonText"
+        (close)="closeModal()"
+        (confirm)="handleModalConfirm($event)"
+        (ratingChange)="setRating($event)">
       </app-modal-view>
     </tbody>
   </table>
