@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../../services/database.service';
 import { ModalViewComponent } from '../modal-view/modal-view.component';
-import { Specialist } from '../../../classes/user';
 
 @Component({
   selector: 'app-appointment-overview',
@@ -47,7 +46,6 @@ export class AppointmentOverviewComponent {
 
   private async loadAppointments(userId: number) {
     this.appointments = await this.db.getAppointmentsByPatient(userId);
-    console.log('Citas cargadas:', this.appointments);
   }
 
   filteredAppointments(): Appointment[] {
@@ -73,7 +71,7 @@ export class AppointmentOverviewComponent {
     this.modalConfig = {
       isVisible: true,
       title: 'Cancelar Turno',
-      description: 'Por favor ingrese el motivo de la cancelación:',
+      description: 'Por favor ingrese el motivo de la cancelación con la especialista:',
       specialistName: this.appointments.find(appt => appt.id === appointmentId)?.specialist_name || '',
       content: '',
       showInput: true,

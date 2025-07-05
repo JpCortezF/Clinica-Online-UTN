@@ -5,6 +5,8 @@ import { Patient, Specialist, User } from '../classes/user';
 import { AuthService } from './auth.service';
 import { Appointment } from '../interfaces/appointment';
 import { PatientProfileResponse } from '../interfaces/PatientProfile';
+import { TreatedPatient } from '../interfaces/TreatedPatient';
+import { CompletedAppointment } from '../interfaces/CompletedAppointment';
 
 @Injectable({
   providedIn: 'root'
@@ -234,6 +236,21 @@ export class DatabaseService {
     return data || [];
   }
 
+  async getSpecialistByUserId(userId: number): Promise<{ id: number } | null> {
+    const { data, error } = await this.sb.supabase
+      .from('specialists')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error al obtener especialista por user_id:', error);
+      return null;
+    }
+
+    return data;
+  }
+
   async getSpecialistsBySpecialtyId(specialtyId: number): Promise<any[]> {
     if (specialtyId == null) {
       console.warn('No se recibió specialtyId válido');
@@ -306,10 +323,10 @@ export class DatabaseService {
 
   // ==================== SPECIALTIES ====================
   
-  async getSpecialties(): Promise<{ id: number, name: string }[]> {
+  async getSpecialties(): Promise<{ id: number, name: string, img_specialty: string }[]> {
     const { data, error } = await this.sb.supabase
       .from('specialties')
-      .select('id, name')
+      .select('id, name, img_specialty')
       .order('name', { ascending: true });
 
     if (error) throw error;
@@ -542,12 +559,13 @@ export class DatabaseService {
 
   async updateAppointmentStatus(appointmentId: number, status: string, reason?: string): Promise<boolean> {
     const updateData: any = { status };
-    if (reason) updateData.cancellation_reason = reason;
+    if (reason) updateData.specialist_review = reason;
 
     const { error } = await this.sb.supabase
       .from('appointments')
       .update(updateData)
-      .eq('id', appointmentId);
+      .eq('id', appointmentId)
+      .single();
 
     if (error) {
       console.error('Error al actualizar estado del turno:', error);
@@ -556,9 +574,9 @@ export class DatabaseService {
     return true;
   }
 
-  async finalizeAppointment(id: number, review: string): Promise<boolean> {
+  async finalizeAppointment(id: number, specialist_review: string): Promise<boolean> {
     const { error } = await this.sb.supabase
-    .from('appointments').update({ status: 'realizado', review}).eq('id', id).single();
+    .from('appointments').update({ status: 'realizado', specialist_review}).eq('id', id).single();
 
     if(error){
       console.error('Error al finalizar el turno:', error);
@@ -569,13 +587,57 @@ export class DatabaseService {
 
   async deleteAppointment(id: number): Promise<boolean> {
     const { error } = await this.sb.supabase
-    .from('appointments').delete().eq('id', id).single();
+    .from('appointments')
+    .update({ status: 'eliminado' })
+    .eq('id', id);
 
-    if(error){
-      console.error('Error al eliminar el turno:', error);
+    if (error) {
+      console.error('Error al marcar el turno como eliminado:', error);
       return false;
     }
     return true;
+  }
+
+  async getPatientsTreatedBySpecialist(specialistId: number): Promise<TreatedPatient[]> {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select(`
+        patient_id,
+        patients!appointments_patient_id_fkey (
+          health_medical,
+          users!patients_user_id_fkey (
+            id, first_name, last_name, age, dni, profile_image_url
+          )
+        )
+      `)
+      .eq('specialist_id', specialistId)
+      .eq('status', 'realizado');
+
+    if (error) {
+      console.error('Error al obtener pacientes atendidos:', error);
+      return [];
+    }
+
+    const uniqueMap = new Map<number, TreatedPatient>();
+
+    for (const row of data) {
+      const patient = Array.isArray(row.patients) ? row.patients[0] : row.patients;
+      const user = Array.isArray(patient?.users) ? patient.users[0] : patient?.users;
+
+      if (user && user.id) {
+        uniqueMap.set(row.patient_id, {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          age: user.age,
+          dni: user.dni,
+          profile_image_url: user.profile_image_url,
+          health_medical: patient.health_medical ?? null
+        });
+      }
+    }
+
+    return Array.from(uniqueMap.values());
   }
   // ==================== OFFICE HOURS ====================
   async getOfficeHoursByUserId(userId: number): Promise<any> {
@@ -652,6 +714,34 @@ export class DatabaseService {
     return true;
   }
 
+  async getCompletedAppointments(patientId: number, specialistId: number): Promise<CompletedAppointment[]> {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select(`
+        id,
+        appointment_date,
+        review,
+        rating,
+        specialties(name)
+      `)
+      .eq('patient_id', patientId)
+      .eq('specialist_id', specialistId)
+      .eq('status', 'realizado');
+
+    if (error) {
+      console.error('Error al obtener turnos realizados:', error);
+      return [];
+    }
+
+    return data.map((row: any) => ({
+      id: row.id,
+      appointment_date: row.appointment_date,
+      review: row.review,
+      rating: row.rating,
+      specialty: row.specialties?.name ?? 'Sin especialidad'
+    }));
+  }
+  
   // ==================== PAGE IMAGES ====================
   async getPageImages(): Promise<pageImages[]> {
     if (this.imagesCache) return this.imagesCache;

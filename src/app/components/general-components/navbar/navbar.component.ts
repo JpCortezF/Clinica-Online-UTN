@@ -55,8 +55,15 @@ export class NavbarComponent {
     }
   }
 
+  goToPatients() {
+    if (this.user) {
+      this.userSession.setUser(this.user);
+      this.router.navigate(['/patients-section']);
+    }
+  }
+
   goToServices() {
-      const currentRoute = this.router.url.split('#')[0]; // Obtiene la ruta actual sin el fragmento
+      const currentRoute = this.router.url.split('#')[0];
       if (currentRoute !== '/') {
         this.router.navigate(['/'], { fragment: 'services-section' });
       }else{

@@ -35,6 +35,9 @@
               <li *ngIf="user.user_type === 'patient' || user.user_type === 'specialist'">
                 <a (click)="goToAppointment()" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Mis Turnos</a>
               </li>
+              <li *ngIf="user.user_type === 'specialist'">
+                <a (click)="goToPatients()" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Pacientes</a>
+              </li>
               <li *ngIf="user.user_type === 'admin'">
                 <a (click)="goToUserSection()" class="block px-4 py-2 hover:bg-gray-200 cursor-pointer">Sección Usuarios</a>
               </li>

@@ -49,7 +49,8 @@ export class ModalViewComponent {
     this.close.emit();
   }
 
-  onConfirm(inputValue: string = '') {
+  onConfirm() {
+    const inputValue = this.inputField?.nativeElement.value || '';
     this.confirm.emit(inputValue);
   }
 }

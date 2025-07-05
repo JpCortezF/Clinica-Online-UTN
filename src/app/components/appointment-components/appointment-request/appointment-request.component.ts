@@ -15,10 +15,11 @@ export class AppointmentRequestComponent {
   db = inject(DatabaseService);
   router = inject(Router);
   appointmentForm!: FormGroup;
-  specialties: { id: number, name: string }[] = [];
+  specialties: { id: number, name: string, img_specialty: string }[] = [];
   specialists: any[] = [];
   availableDates: { label: string; value: string }[] = [];
   availableTimes: string[] = [];
+  isLoadingSpecialists = false;
   @Output() appointmentSubmitted = new EventEmitter<void>();
   
   constructor(private fb: FormBuilder){}
@@ -49,9 +50,19 @@ export class AppointmentRequestComponent {
   }
 
   selectSpecialty(id: number) {
-    this.appointmentForm.get('specialtyId')?.setValue(id);
-    this.appointmentForm.get('specialtyId')?.markAsTouched();
-  }
+  this.appointmentForm.patchValue({
+    specialtyId: id,
+    specialistId: '',
+    date: '',
+    time: ''
+  });
+
+  this.appointmentForm.get('specialtyId')?.markAsTouched();
+
+  this.specialists = [];
+  this.availableDates = [];
+  this.availableTimes = [];
+}
 
 
   async loadSpecialties() {
@@ -59,7 +70,11 @@ export class AppointmentRequestComponent {
   }
 
   async loadSpecialists(specialty_id: number) {
+    this.isLoadingSpecialists = true;
+    this.specialists = [];
     this.specialists = await this.db.getSpecialistsBySpecialty(specialty_id);
+    
+    this.isLoadingSpecialists = false;
   }
 
   async loadDates(specialistId: number) {
@@ -164,6 +179,16 @@ export class AppointmentRequestComponent {
     });
 
     return `${formattedDate} ${formattedTime}`;
+  }
+
+  selectDate(date: string) {
+    this.appointmentForm.get('date')?.setValue(date);
+    this.appointmentForm.get('date')?.markAsTouched();
+  }
+
+  selectTime(time: string) {
+    this.appointmentForm.get('time')?.setValue(time);
+    this.appointmentForm.get('time')?.markAsTouched();
   }
 
   async onSubmit() {

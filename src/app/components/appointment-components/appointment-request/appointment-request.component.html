@@ -26,7 +26,7 @@
                   'scale-105': appointmentForm.value.specialtyId === spec.id
                 }">
                 
-                <img [src]="'/imagen_especialidad.webp'" alt="Especialidad"
+                <img [src]="spec.img_specialty || 'imagen_especialidad.webp'" alt="Especialidad"
                     class="w-full h-full object-cover" />
 
                 <div *ngIf="appointmentForm.value.specialtyId !== spec.id"
@@ -48,37 +48,44 @@
           <i class="fas fa-user-md mr-2"></i>Profesional
         </label>
 
-        <ng-container *ngIf="specialists.length > 0; else noSpecialists">
-          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-            <div *ngFor="let sp of specialists"
-                class="cursor-pointer group"
-                (click)="appointmentForm.get('specialistId')?.setValue(sp.id)">          
-              <div class="w-[60%] max-w-xs mx-auto relative">
-                <div
-                  class="aspect-square rounded-lg overflow-hidden shadow transition-transform duration-300 relative"
-                  [ngClass]="{
-                    'scale-105': appointmentForm.value.specialistId === sp.id
-                  }">
-
-                  <img [src]="sp.user.profile_image_url || '/default-profile.png'" alt="Profesional"
-                      class="w-full h-full object-cover" />
-
-                  <div *ngIf="appointmentForm.value.specialistId !== sp.id"
-                      class="absolute inset-0 bg-black/40 rounded-lg pointer-events-none"></div>
-                </div>
-              </div>
-
-              <div class="w-full h-10 flex items-center justify-center text-white text-sm font-semibold text-center mt-2 truncate">
-                Dr./Dra. <br>{{ sp.user.first_name }} {{ sp.user.last_name }}
-              </div>
-            </div>
+        <ng-container *ngIf="isLoadingSpecialists; else loadedSpecialists">
+          <div class="flex justify-center items-center h-32">
+            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         </ng-container>
 
-        <ng-template #noSpecialists>
-          <p class="text-red-200 text-sm italic mt-2">
-            No hay profesionales habilitados para esta especialidad.
-          </p>
+        <ng-template #loadedSpecialists>
+          <ng-container *ngIf="specialists.length > 0; else noSpecialists">
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    <div *ngFor="let sp of specialists"
+                        class="cursor-pointer group"
+                        (click)="appointmentForm.get('specialistId')?.setValue(sp.id)">          
+                      <div class="w-[60%] max-w-xs mx-auto relative">
+                        <div
+                          class="aspect-square rounded-lg overflow-hidden shadow transition-transform duration-300 relative"
+                          [ngClass]="{
+                            'scale-105': appointmentForm.value.specialistId === sp.id
+                          }">
+                          <img [src]="sp.user.profile_image_url || '/default-profile.png'" alt="Profesional"
+                              class="w-full h-full object-cover" />
+
+                          <div *ngIf="appointmentForm.value.specialistId !== sp.id"
+                              class="absolute inset-0 bg-black/40 rounded-lg pointer-events-none"></div>
+                        </div>
+                      </div>
+
+                      <div class="w-full h-10 flex items-center justify-center text-white text-sm font-semibold text-center mt-2 truncate">
+                        Dr./Dra. <br>{{ sp.user.first_name }} {{ sp.user.last_name }}
+                      </div>
+                    </div>
+                  </div>
+          </ng-container>
+
+          <ng-template #noSpecialists>
+            <p class="text-red-200 text-sm italic mt-2">
+              No hay profesionales habilitados para esta especialidad.
+            </p>
+          </ng-template>
         </ng-template>
 
         <div *ngIf="appointmentForm.get('specialistId')?.invalid && appointmentForm.get('specialistId')?.touched" 
@@ -87,48 +94,68 @@
         </div>
       </div>
       
-      <!-- Fecha -->
-      <div *ngIf="availableDates.length > 0" class="mb-6 animate-fade-in">
-        <label class="block text-white font-medium mb-2">
-          <i class="far fa-calendar-alt mr-2"></i>Fecha Disponible
-        </label>
-        <select 
-          formControlName="date"
-          class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-          [ngClass]="{'border-red-400': appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched}">
-          <option value="" disabled selected>Seleccione una fecha</option>
-          <option *ngFor="let d of availableDates" [value]="d.value">
-            {{ d.label }}
-          </option>
-        </select>
-        <div *ngIf="appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched" 
-             class="text-red-200 text-sm mt-1">
-          Por favor seleccione una fecha
-        </div>
-      </div>
+      <!-- FECHAS DISPONIBLES -->
+      <ng-container *ngIf="availableDates.length > 0">
+        <div class="mb-6 animate-fade-in">
+          <label class="block text-white font-medium mb-2">
+            <i class="far fa-calendar-alt mr-2"></i>Fecha Disponible
+          </label>
 
-      <!-- Horario -->
-      <ng-container *ngIf="availableTimes.length > 0; else noAvailableTimes">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <button *ngFor="let d of availableDates"
+                    type="button"
+                    (click)="selectDate(d.value)"
+                    [ngClass]="{
+                      'bg-blue-600 text-white ring-2 ring-blue-300': appointmentForm.get('date')?.value === d.value,
+                      'bg-white text-gray-800 hover:bg-blue-100': appointmentForm.get('date')?.value !== d.value,
+                      'border-2 border-white/20': true
+                    }"
+                    class="w-full aspect-square text-xs rounded-lg p-2 transition-all duration-150 shadow-sm text-center leading-snug">
+              {{ d.label }}
+            </button>
+          </div>
+
+          <div *ngIf="appointmentForm.get('date')?.invalid && appointmentForm.get('date')?.touched"
+              class="text-red-200 text-sm mt-2">
+            Por favor seleccione una fecha
+          </div>
+        </div>
+      </ng-container>
+                 
+      @if(appointmentForm.get('specialistId')?.touched){
+          <div class="mb-6 animate-fade-in text-red-200 text-sm mt-1">
+            No hay fechas disponibles.
+          </div>
+      }
+
+      <!-- HORARIOS DISPONIBLES -->
+      <ng-container *ngIf="availableTimes.length > 0">
         <div class="mb-8 animate-fade-in">
           <label class="block text-white font-medium mb-2">
-            <i class="far fa-clock mr-2"></i>Horario Disponible
+            <i class="far fa-clock mr-2"></i>Horarios Disponibles
           </label>
-          <select 
-            formControlName="time"
-            class="w-full px-4 py-3 rounded-lg bg-white/90 border-2 border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-            [ngClass]="{'border-red-400': appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched}">
-            <option value="" disabled selected>Seleccione un horario</option>
-            <option *ngFor="let t of availableTimes" [value]="t">
+
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            <button *ngFor="let t of availableTimes"
+                    type="button"
+                    (click)="selectTime(t)"
+                    [ngClass]="{
+                      'bg-blue-600 text-white ring-2 ring-blue-300': appointmentForm.get('time')?.value === t,
+                      'bg-white text-gray-800 hover:bg-blue-100': appointmentForm.get('time')?.value !== t,
+                      'border-2 border-white/20': true
+                    }"
+                    class="w-full aspect-square text-xs rounded-lg p-2 transition-all duration-150 shadow-sm">
               {{ formatTime(t) }}
-            </option>
-          </select>
-          <div *ngIf="appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched" 
-              class="text-red-200 text-sm mt-1">
+            </button>
+          </div>
+
+          <div *ngIf="appointmentForm.get('time')?.invalid && appointmentForm.get('time')?.touched"
+              class="text-red-200 text-sm mt-2">
             Por favor seleccione un horario
           </div>
         </div>
       </ng-container>
-      
+
       <ng-template #noAvailableTimes>
         <div *ngIf="appointmentForm.get('date')?.value" class="mb-8 animate-fade-in text-red-200 text-sm mt-1">
             No hay horarios disponibles para la fecha seleccionada.
