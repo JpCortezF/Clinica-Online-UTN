@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { TreatedPatient } from '../../../interfaces/TreatedPatient';
+import { CompletedAppointment } from '../../../interfaces/CompletedAppointment';
+import { SpanishDatePipe } from '../../../pipes/spanish-date.pipe';
 
 @Component({
   selector: 'app-modal-view',
-  imports: [CommonModule],
+  imports: [CommonModule, SpanishDatePipe],
   templateUrl: './modal-view.component.html',
   styleUrl: './modal-view.component.css'
 })
@@ -20,12 +23,16 @@ export class ModalViewComponent {
   @Input() showConfirmButton: boolean = false;
   @Input() showCancelButton: boolean = true;
   @Input() confirmButtonText: string = 'Confirmar';
+  @Input() selectedPatientForModal: TreatedPatient | null = null;
   @ViewChild('inputField') inputField!: ElementRef<HTMLTextAreaElement>;
   
   @Output() close = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<string>();
   @Output() ratingChange = new EventEmitter<number>();
   
+  @Input() selectedPatient: TreatedPatient | null = null;
+  @Input() patientAppointments: CompletedAppointment[] = [];
+
   setRating(star: number) {
     this.currentRating = star;
     this.ratingChange.emit(star);
@@ -52,6 +59,15 @@ export class ModalViewComponent {
   onConfirm() {
     const inputValue = this.inputField?.nativeElement.value || '';
     this.confirm.emit(inputValue);
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 }
 

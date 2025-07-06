@@ -1,0 +1,20 @@
+<div tabindex="0" (click)="onCardClick()"
+  class="bg-white rounded-lg shadow hover:shadow-lg cursor-pointer p-4 transition-all group focus:ring-2 focus:ring-blue-400 outline-none">
+
+  <div class="mx-auto aspect-square mb-3 rounded-full overflow-hidden border-2 border-blue-100 group-hover:scale-105 transition-transform"
+       [class]="imageSize">
+    <img [src]="profile.profile_image_url" alt="Foto perfil"
+         class="w-full h-full object-cover" />
+  </div>
+
+  <div class="text-center">
+    <p class="text-gray-800 font-semibold text-sm truncate">
+      {{ profile.first_name }} {{ profile.last_name }}
+    </p>
+    
+    <ng-container *ngIf="showDetails">
+      <p class="text-gray-500 text-xs">DNI: {{ profile.dni }}</p>
+      <p class="text-gray-500 text-xs">Edad: {{ profile.age }} años</p>
+    </ng-container>
+  </div>
+</div>

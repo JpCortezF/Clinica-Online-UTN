@@ -1,6 +1,30 @@
 <div class="min-h-screen">
   <div class="p-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Especialistas</h2>
+    <h2 class="text-4xl md:text-3xl font-bold text-blue-500 mb-6 mt-16">Sección usuarios</h2>
+
+    <!-- Tabs -->
+    <div class="flex space-x-4 mb-6">
+      <button class="px-4 py-2 rounded-md text-sm font-medium"
+              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'todos', 'bg-gray-200': selectedTab !== 'todos' }"
+              (click)="selectedTab = 'todos'">
+        Todos
+      </button>
+      <button class="px-4 py-2 rounded-md text-sm font-medium"
+              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'especialistas', 'bg-gray-200': selectedTab !== 'especialistas' }"
+              (click)="selectedTab = 'especialistas'">
+        Especialistas
+      </button>
+      <button class="px-4 py-2 rounded-md text-sm font-medium"
+              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'pacientes', 'bg-gray-200': selectedTab !== 'pacientes' }"
+              (click)="selectedTab = 'pacientes'">
+        Pacientes
+      </button>
+      <button class="px-4 py-2 rounded-md text-sm font-medium"
+              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'admin', 'bg-gray-200': selectedTab !== 'admin' }"
+              (click)="selectedTab = 'admin'">
+        Administradores
+      </button>
+    </div>
 
     <div *ngIf="isLoading" class="text-center text-gray-500">Cargando...</div>
 
@@ -8,55 +32,135 @@
       <thead class="bg-gray-100 text-gray-700 text-sm uppercase border-b-2 border-gray-200">
         <tr>
           <th class="px-4 py-3">Nombre</th>
-          <th class="px-4 py-3">Especialidad</th>
+          <th *ngIf="selectedTab === 'especialistas'" class="px-4 py-3">Especialidad</th>
+          <th *ngIf="selectedTab === 'pacientes'" class="px-4 py-3">Obra Social</th>
           <th class="px-4 py-3">DNI</th>
           <th class="px-4 py-3">Email</th>
           <th class="px-4 py-3">Edad</th>
-          <th class="px-4 py-3">Estado</th>
-          <th class="px-4 py-3">Acciones</th>
+          <th *ngIf="selectedTab === 'especialistas'" class="px-4 py-3">Estado</th>
+          <th *ngIf="selectedTab === 'especialistas'" class="px-4 py-3">Acciones</th>
+          <th *ngIf="selectedTab === 'todos'" class="px-4 py-3">Rol</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
-        <tr *ngIf="!specialists.length">
-          <td colspan="6" class="text-center py-4 text-gray-500">No hay especialistas registrados</td>
-        <tr *ngFor="let s of specialists" class="text-center">
-          <td class="px-4 py-3 whitespace-nowrap text-left">{{ s.user.first_name }} {{ s.user.last_name }}</td>
-          <td class="px-4 py-3">
+        <!-- ESPECIALISTAS -->
+        <tr *ngIf="selectedTab === 'especialistas' && specialists.length === 0">
+          <td colspan="8" class="text-center py-4 text-gray-500">No hay especialistas registrados</td>
+        </tr>
+        <ng-container *ngIf="selectedTab === 'especialistas'">
+          <tr *ngFor="let s of specialists" class="text-center">
+            <td class="px-4 py-3 whitespace-nowrap text-left flex items-center gap-2">
+              <img [src]="s.user.profile_image_url || '/default-profile.png'" alt="Foto" class="w-8 h-8 rounded-full object-cover" />
+              {{ s.user.first_name }} {{ s.user.last_name }}
+            </td>
+            <td class="px-4 py-3">
               <span *ngFor="let ss of s.specialist_specialties" class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-1">
                 {{ ss.specialty.name }}
               </span>
-          </td>
-          <td class="px-4 py-3">{{ s.user.dni }}</td>
-          <td class="px-4 py-3 text-left">{{ s.user.email }}</td>
-          <td class="px-4 py-3">{{ s.user.age }}</td>
-          <td class="px-4 py-3">
-            <span [ngClass]="{
-              'bg-yellow-100 text-yellow-800': s.status === 'pendiente',
-              'bg-green-100 text-green-800': s.status === 'habilitado',
-              'bg-red-100 text-red-800': s.status === 'rechazado'
-            }"
-            class="px-3 py-1 rounded-full text-xs font-semibold capitalize">
-              {{ s.status }}
-            </span>
-          </td>
-          <td class="px-4 py-3 space-x-2">
-            <button
-              (click)="updateStatus(s.id, 'habilitado')"
-              class="text-green-600 hover:underline text-sm"
-              *ngIf="s.status !== 'habilitado'"
-            >
-              Habilitar
-            </button>
-            <button
-              (click)="updateStatus(s.id, 'rechazado')"
-              class="text-red-600 hover:underline text-sm"
-              *ngIf="s.status !== 'rechazado'"
-            >
-              Rechazar
-            </button>
-          </td>
-        </tr>
+            </td>
+            <td class="px-4 py-3">{{ s.user.dni }}</td>
+            <td class="px-4 py-3">{{ s.user.email }}</td>
+            <td class="px-4 py-3">{{ s.user.age }}</td>
+            <td class="px-4 py-3">
+              <span [ngClass]="{
+                'bg-yellow-100 text-yellow-800': s.status === 'pendiente',
+                'bg-green-100 text-green-800': s.status === 'habilitado',
+                'bg-red-100 text-red-800': s.status === 'rechazado'
+              }" class="px-3 py-1 rounded-full text-xs font-semibold capitalize">
+                {{ s.status }}
+              </span>
+            </td>
+            <td class="px-4 py-3 space-x-2">
+              <button (click)="updateStatus(s.id, 'habilitado')" class="text-green-600 hover:underline text-sm" *ngIf="s.status !== 'habilitado'">
+                Habilitar
+              </button>
+              <button (click)="updateStatus(s.id, 'rechazado')" class="text-red-600 hover:underline text-sm" *ngIf="s.status !== 'rechazado'">
+                Rechazar
+              </button>
+            </td>
+          </tr>
+        </ng-container>
+
+        <!-- PACIENTES -->
+         <ng-container *ngIf="selectedTab === 'pacientes'">
+           <tr *ngFor="let p of patients" class="text-center">
+             <td class="px-4 py-3 whitespace-nowrap text-left flex items-center gap-2">
+               <img [src]="p.user.profile_image_url || '/default-profile.png'" alt="Foto" class="w-8 h-8 rounded-full object-cover" />
+               {{ p.user.first_name }} {{ p.user.last_name }}
+             </td>
+             <td class="px-4 py-3">{{ p.health_medical || '-' }}</td>
+             <td class="px-4 py-3">{{ p.user.dni }}</td>
+             <td class="px-4 py-3">{{ p.user.email }}</td>
+             <td class="px-4 py-3">{{ p.user.age }}</td>
+           </tr>
+         </ng-container>
+
+        <!-- ADMINISTRADORES -->
+        <ng-container *ngIf="selectedTab === 'admin'">
+          <tr *ngFor="let a of admins" class="text-center">
+            <td class="px-4 py-3 whitespace-nowrap text-left flex items-center gap-2">
+              <img [src]="a.profile_image_url || '/default-profile.png'" alt="Foto" class="w-8 h-8 rounded-full object-cover" />
+              {{ a.first_name }} {{ a.last_name }}
+            </td>
+            <td class="px-4 py-3">{{ a.dni }}</td>
+            <td class="px-4 py-3">{{ a.email }}</td>
+            <td class="px-4 py-3">{{ a.age }}</td>
+          </tr>
+        </ng-container>
+
+        <ng-container *ngIf="selectedTab === 'todos'">
+          <tr *ngFor="let u of allUsers" class="text-center">
+            <td class="px-4 py-3 flex items-center gap-3 whitespace-nowrap text-left">
+              <img [src]="u.profile_image_url || '/default-profile.png'" class="w-8 h-8 rounded-full object-cover" />
+              {{ u.first_name }} {{ u.last_name }}
+            </td>
+            <td class="px-4 py-3 text-left">{{ u.dni }}</td>
+            <td class="px-4 py-3 text-left">{{ u.email }}</td>
+            <td class="px-4 py-3">{{ u.age }}</td>
+            <td class="px-4 py-3 capitalize">{{ getUserRole(u.user_type) }}</td>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
+    <ng-container *ngIf="selectedTab === 'todos' && allUsers.length > 0">
+      <button (click)="downloadAllUsersExcel()"
+          class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50">
+        <i class="fas fa-file-excel text-xl"></i>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="selectedTab === 'pacientes' && patients.length > 0">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+        <app-card-profile *ngFor="let p of patients"
+          [profile]="p.user"
+          [showDetails]="true"
+          (clicked)="confirmDownloadHistory(p)">
+        </app-card-profile>
+      </div>
+
+      <app-modal-view
+        *ngIf="showDownloadModal"
+        [title]="'Descarga de historia clínica'"
+        [description]="'¿Desea descargar la historia clínica del paciente?'"
+        [selectedPatient]="selectedPatientForDownload"
+        [selectedPatientForModal]="selectedPatientForModal"
+        [showConfirmButton]="true"
+        [confirmButtonText]="'Descargar'"
+        [showCancelButton]="true"
+        (close)="showDownloadModal = false"
+        (confirm)="downloadPatientHistory()">
+      </app-modal-view>
+
+      <app-modal-view
+        *ngIf="showNoAppointmentsModal"
+        [title]="'Sin historia clínica disponible'"
+        [description]="'El paciente seleccionado no tiene turnos registrados.'"
+        [selectedPatient]="selectedPatientForDownload"
+        [selectedPatientForModal]="selectedPatientForModal"
+        [showConfirmButton]="false"
+        [showCancelButton]="true"
+        (close)="showNoAppointmentsModal = false">
+      </app-modal-view>
+    </ng-container>
   </div>
 </div>

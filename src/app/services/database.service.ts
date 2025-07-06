@@ -4,7 +4,7 @@ import { pageImages } from '../classes/pageImage';
 import { Patient, Specialist, User } from '../classes/user';
 import { AuthService } from './auth.service';
 import { Appointment } from '../interfaces/appointment';
-import { PatientProfileResponse } from '../interfaces/PatientProfile';
+import { PatientProfile } from '../interfaces/PatientProfile';
 import { TreatedPatient } from '../interfaces/TreatedPatient';
 import { CompletedAppointment } from '../interfaces/CompletedAppointment';
 
@@ -17,6 +17,16 @@ export class DatabaseService {
   private imagesCache: pageImages[] | null = null;
   
   // ==================== USERS ====================
+  async getAdmins(): Promise<any[]> {
+    const { data, error } = await this.sb.supabase
+      .from('users')
+      .select('id, first_name, last_name, age, dni, email, profile_image_url, user_type')
+      .eq('user_type', 'admin')
+
+    if (error) throw error;
+    return data;
+  }
+
   async registerBaseUser(user: User): Promise<{ auth_id: string, user_id: number }> {
     const { data, error } = await this.auth.register(user.email, user.password);
     if (error || !data?.user) throw error ?? new Error('No se pudo crear el usuario');
@@ -128,7 +138,7 @@ export class DatabaseService {
 
     return publicUrlData.publicUrl;
   }
-
+  
   // ==================== PATIENTS ====================
   async getPatients(): Promise<any[]> {
     const { data, error } = await this.sb.supabase
@@ -144,7 +154,8 @@ export class DatabaseService {
           email,
           age,
           dni,
-          profile_image_url
+          profile_image_url,
+          user_type
         )
       `)
       .order('id', { ascending: true });
@@ -190,7 +201,7 @@ export class DatabaseService {
       )
     `)
     .eq('id', userId)
-    .single<PatientProfileResponse>();
+    .single<PatientProfile>();
 
   if (error || !data) {
     console.error('Error al obtener datos del paciente:', error);
@@ -222,7 +233,9 @@ export class DatabaseService {
           last_name,
           age,
           dni,
-          email
+          email,
+          profile_image_url,
+          user_type
         ),
         specialist_specialties (
           specialty:specialties (
@@ -256,7 +269,7 @@ export class DatabaseService {
       console.warn('No se recibió specialtyId válido');
       return [];
     }
-    // 1. Obtener relaciones entre especialistas y la especialidad
+    // Obtener relaciones entre especialistas y la especialidad
     const { data: relData, error: relError } = await this.sb.supabase
       .from('specialist_specialties')
       .select('specialist_id').eq('specialty_id', specialtyId);
@@ -269,7 +282,6 @@ export class DatabaseService {
     const specialistIds = relData.map(r => r.specialist_id).filter(id => id != null);
     if (specialistIds.length === 0) return [];
 
-    // 2. Obtener información de cada especialista (join con users)
     const { data: specialists, error: specUserError } = await this.sb.supabase
       .from('specialists')
       .select('id, status, user:users(first_name, last_name)').in('id', specialistIds)
@@ -358,6 +370,69 @@ export class DatabaseService {
   }
 
   // ==================== APPOINTMENTS ====================
+  async getRawAppointmentsByPatientId(patientId: number): Promise<any[]> {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select('*')
+      .eq('patient_id', patientId);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getFullAppointments(patientId: number): Promise<Appointment[]> {
+    const rawAppointments = await this.getRawAppointmentsByPatientId(patientId);
+    const appointments: Appointment[] = [];
+
+    for (const a of rawAppointments) {
+      const specialistInfo = await this.sb.supabase
+        .from('specialists')
+        .select('user_id')
+        .eq('id', a.specialist_id)
+        .single();
+
+      const userId = specialistInfo.data?.user_id;
+
+      let specialistName = 'Sin nombre';
+      if (userId) {
+        const userInfo = await this.sb.supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', userId)
+          .single();
+
+        if (userInfo.data) {
+          specialistName = `${userInfo.data.first_name} ${userInfo.data.last_name}`;
+        }
+      }
+
+      // Nombre de la especialidad
+      const specialtyRes = await this.sb.supabase
+        .from('specialties')
+        .select('name')
+        .eq('id', a.specialty_id)
+        .single();
+
+      const specialtyName = specialtyRes.data?.name ?? 'Sin especialidad';
+
+      appointments.push({
+        id: a.id,
+        request_message: a.request_message,
+        request_date: a.request_date,
+        appointment_date: a.appointment_date,
+        status: a.status,
+        review: a.review,
+        specialist_review: a.specialist_review,
+        patient_name: '',
+        specialist_name: specialistName,
+        specialty_name: specialtyName,
+        survey_completed: a.survey_completed,
+        rating: a.rating
+      });
+    }
+
+    return appointments;
+  }
 
   async getAppointmentsByPatientId(patientId: number): Promise<Appointment[]> {
     const { data, error } = await this.sb.supabase
@@ -605,6 +680,7 @@ export class DatabaseService {
         patient_id,
         patients!appointments_patient_id_fkey (
           health_medical,
+          id,
           users!patients_user_id_fkey (
             id, first_name, last_name, age, dni, profile_image_url
           )
@@ -623,7 +699,6 @@ export class DatabaseService {
     for (const row of data) {
       const patient = Array.isArray(row.patients) ? row.patients[0] : row.patients;
       const user = Array.isArray(patient?.users) ? patient.users[0] : patient?.users;
-
       if (user && user.id) {
         uniqueMap.set(row.patient_id, {
           id: user.id,
@@ -632,6 +707,7 @@ export class DatabaseService {
           age: user.age,
           dni: user.dni,
           profile_image_url: user.profile_image_url,
+          patient_id: patient.id,
           health_medical: patient.health_medical ?? null
         });
       }

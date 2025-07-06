@@ -1,41 +1,66 @@
 <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50" (click)="onClose()">
-  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md" (click)="$event.stopPropagation()">
-    <h2 class="text-xl font-bold mb-4">{{ title }}</h2>
-    
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl relative" (click)="$event.stopPropagation()">
+    <!-- Título y descripción -->
+    <h2 class="text-2xl font-bold mb-2">{{ title }}</h2>
     <p class="text-gray-700 mb-4">{{ description }} <b>{{ specialistName }}</b></p>
-    
-    <!-- Contenido adicional -->
-    <p *ngIf="content" class="text-gray-700 whitespace-pre-line bg-gray-50 p-3 rounded mb-4">
+
+    <!-- Sección Paciente -->
+    <div *ngIf="selectedPatient" class="flex items-center space-x-4 mb-6">
+      <img [src]="selectedPatient.profile_image_url || selectedPatientForModal?.profile_image_url || 'default-profile.png'"
+           alt="Foto del paciente"
+           class="w-20 h-20 rounded-full object-cover border border-gray-300 shadow-sm" />
+      <div class="flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ selectedPatient.first_name || selectedPatientForModal?.first_name }} {{ selectedPatient.last_name || selectedPatientForModal?.last_name }}
+        </h3>
+        <p class="text-sm text-gray-600">Obra social: <strong>{{ selectedPatient.health_medical || 'No especificada' }}</strong></p>
+      </div>
+    </div>
+
+    <!-- Historial de turnos -->
+    <div *ngIf="patientAppointments.length > 0">
+      <ul class="space-y-3 max-h-64 overflow-y-auto pr-2">
+        <li *ngFor="let appt of patientAppointments" class="p-3 bg-gray-50 rounded border border-gray-200 shadow-sm">
+          <p><strong>Fecha:</strong> {{ appt.appointment_date | spanishDate }}</p>
+          <p><strong>Especialidad:</strong> {{ appt.specialty }}</p>
+          <p *ngIf="appt.review"><strong>Reseña:</strong> {{ appt.review }}</p>
+          <p *ngIf="appt.rating"><strong>Calificación:</strong> {{ appt.rating }}/5</p>
+        </li>
+      </ul>
+    </div>
+
+    <div *ngIf="content" class="text-gray-700 whitespace-pre-line bg-gray-50 p-3 rounded mb-4 mt-6">
       {{ content }}
-    </p>
-    
-    <!-- Sistema de calificación con estrellas - Versión optimizada -->
+    </div>
+
+    <div class="mt-8 pt-4"></div>
+    <!-- Rating (si aplica) -->
     <div *ngIf="showRating" class="mb-4">
       <div class="flex justify-center space-x-2 star-rating">
         <button *ngFor="let star of [1,2,3,4,5]" 
                 (click)="setRating(star)"
                 class="text-3xl focus:outline-none transition-all duration-100 group">
           <i class="fas fa-star transition-transform duration-150"
-            [ngClass]="{
-              'text-yellow-400': star <= currentRating,
-              'text-gray-300': star > currentRating
-            }"></i>
+             [ngClass]="{
+               'text-yellow-400': star <= currentRating,
+               'text-gray-300': star > currentRating
+             }"></i>
         </button>
       </div>
       <p *ngIf="currentRating > 0" class="text-center text-sm text-gray-700 mt-2">
-        Calificación seleccionada: {{currentRating}}/5
+        Calificación seleccionada: {{ currentRating }}/5
       </p>
     </div>
-    
-    <!-- Input para comentarios -->
+
+    <!-- Comentario input (si aplica) -->
     <div *ngIf="showInput" class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">{{ inputLabel }}</label>
       <textarea #inputField 
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows="3"></textarea>
     </div>
-    
-    <!-- Botones -->
+
+    <!-- Acciones -->
     <div class="flex justify-end mt-6 space-x-3">
       <button *ngIf="showCancelButton" 
               (click)="onClose()" 
@@ -51,5 +76,8 @@
         {{ confirmButtonText }}
       </button>
     </div>
+
+    <!-- Logo -->
+    <img class="absolute bottom-4 left-4 h-14 opacity-90" src="JB_Clinica.png" alt="JB Clínica logo"/>
   </div>
 </div>

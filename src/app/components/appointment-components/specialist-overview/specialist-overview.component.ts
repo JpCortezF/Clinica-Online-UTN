@@ -122,7 +122,7 @@ export class SpecialistOverviewComponent {
   viewReview(review: string) {
     this.modalConfig = {
       isVisible: true,
-      title: 'Reseña del especialista',
+      title: 'Reseña del paciente',
       description: '',
       content: review,
       showInput: false,

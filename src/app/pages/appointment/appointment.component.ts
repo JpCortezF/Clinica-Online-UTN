@@ -38,6 +38,7 @@ export class AppointmentComponent {
 
   async loadAppointments(){
     this.appointments = await this.db.getAppointmentsByPatientId(this.user.id);
+    console.log('TURNOS:', this.appointments);
   }
 
   async cancelAppointment(id: number) {

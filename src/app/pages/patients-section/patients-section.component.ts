@@ -5,10 +5,11 @@ import { CommonModule } from '@angular/common';
 import { TreatedPatient } from '../../interfaces/TreatedPatient';
 import { CompletedAppointment } from '../../interfaces/CompletedAppointment';
 import { ModalViewComponent } from "../../components/appointment-components/modal-view/modal-view.component";
+import { CardProfileComponent } from "../../components/profile-components/card-profile/card-profile.component";
 
 @Component({
   selector: 'app-patients-section',
-  imports: [CommonModule, ModalViewComponent],
+  imports: [CommonModule, ModalViewComponent, CardProfileComponent],
   templateUrl: './patients-section.component.html',
   styleUrl: './patients-section.component.css'
 })
@@ -32,11 +33,9 @@ export class PatientsSectionComponent {
     this.user = this.userSession.getUser();
     if (this.user) {
       const specialist = await this.db.getSpecialistByUserId(this.user.id);
-      if (specialist) {
-        this.patients = await this.db.getPatientsTreatedBySpecialist(specialist.id);
-      }
+      if (specialist)
+        this.patients = await this.db.getPatientsTreatedBySpecialist(specialist.id); 
     }
-
     this.isLoading = false;
   }
 
@@ -45,6 +44,6 @@ export class PatientsSectionComponent {
     this.showPatientModal = true;
     const specialist = await this.db.getSpecialistByUserId(this.user.id);
     if(specialist)
-    this.patientAppointments = await this.db.getCompletedAppointments(patient.id, specialist.id);
+      this.patientAppointments = await this.db.getCompletedAppointments(patient.patient_id, specialist.id);
   }
 }
