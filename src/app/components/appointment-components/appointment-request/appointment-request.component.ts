@@ -19,6 +19,8 @@ export class AppointmentRequestComponent {
   specialists: any[] = [];
   availableDates: { label: string; value: string }[] = [];
   availableTimes: string[] = [];
+  reasonForVisit: string = '';
+  
   isLoadingSpecialists = false;
   @Output() appointmentSubmitted = new EventEmitter<void>();
   

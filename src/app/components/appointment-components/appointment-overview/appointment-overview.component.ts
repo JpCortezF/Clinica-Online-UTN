@@ -96,24 +96,6 @@ export class AppointmentOverviewComponent {
     if (success) await this.reloadAppointments();
   }
 
-  rateAppointment(appointmentId: number) {
-    this.modalConfig = {
-      isVisible: true,
-      title: 'Calificar atención médica',
-      description: '¿Cómo calificarías la atención recibida?',
-      specialistName: this.appointments.find(appt => appt.id === appointmentId)?.specialist_name || '',
-      content: '',
-      showInput: true,
-      inputLabel: 'Comentario (opcional)',
-      showRating: true,
-      currentRating: 0,
-      showConfirmButton: true,
-      confirmButtonText: 'Enviar calificación',
-      action: 'rate',
-      appointmentId: appointmentId
-    };
-  }
-
   viewReview(review: string) {
     this.currentReview = review;
     this.showReviewModal = true;
@@ -153,12 +135,6 @@ export class AppointmentOverviewComponent {
         
       case 'survey':
         this.db.submitSurvey(
-          this.modalConfig.appointmentId!, input, this.modalConfig.currentRating
-        ).then(handleSuccess);
-        break;
-        
-      case 'rate':
-        this.db.rateAppointment(
           this.modalConfig.appointmentId!, input, this.modalConfig.currentRating
         ).then(handleSuccess);
         break;

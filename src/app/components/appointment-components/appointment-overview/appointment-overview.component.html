@@ -97,14 +97,12 @@
 
           <!-- Columna de Acciones -->
           <td class="px-4 py-3 whitespace-nowrap space-x-2">
-            <!-- Cancelar turno -->
             <ng-container *ngIf="appt.status === 'aceptado'">
               <button (click)="cancelAppointment(appt.id)" class="cancel-btn">
                 <i class="fas fa-times-circle mr-1"></i> Cancelar
               </button>
             </ng-container>
 
-            <!-- Eliminar turno -->
             <ng-container *ngIf="appt.status === 'cancelado' || appt.status === 'rechazado'">
               <button (click)="deleteAppointment(appt.id)" class="delete-btn">
                 <i class="fas fa-trash-alt"></i>
@@ -119,7 +117,6 @@
               </div>
             </ng-container>
 
-            <!-- Encuesta (solo si no está completada) -->
             <ng-container *ngIf="appt.status === 'realizado' && !appt.survey_completed">
               <button (click)="completeSurvey(appt.id)" class="survey-btn">
                 <i class="fas fa-clipboard-list"></i>
@@ -144,7 +141,6 @@
         </tr>
       </ng-container>
 
-      <!-- Mensaje cuando no hay turnos -->
       <ng-template #noAppointments>
         <tr>
           <td colspan="8" class="px-4 py-8 text-center">
@@ -157,7 +153,6 @@
         </tr>
       </ng-template>
 
-      <!-- Modales -->
       <app-modal-view
         *ngIf="showReviewModal"
         [title]="'Reseña del especialista'"
@@ -171,6 +166,7 @@
         [description]="modalConfig.description"
         [specialistName]="modalConfig.specialistName"
         [content]="modalConfig.content"
+        [action]="'survey'"
         [showInput]="modalConfig.showInput"
         [inputLabel]="modalConfig.inputLabel"
         [showRating]="modalConfig.showRating"

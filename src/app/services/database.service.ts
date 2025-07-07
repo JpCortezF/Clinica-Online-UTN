@@ -7,6 +7,8 @@ import { Appointment } from '../interfaces/appointment';
 import { PatientProfile } from '../interfaces/PatientProfile';
 import { TreatedPatient } from '../interfaces/TreatedPatient';
 import { CompletedAppointment } from '../interfaces/CompletedAppointment';
+import { FinalizeAppointmentData } from '../interfaces/FinalizeAppointmentData';
+import { RawSpecialist } from '../interfaces/RawSpecialist';
 
 @Injectable({
   providedIn: 'root'
@@ -196,6 +198,7 @@ export class DatabaseService {
       dni,
       profile_image_url,
       patients (
+        id,
         health_medical,
         second_profile_image_url
       )
@@ -207,7 +210,7 @@ export class DatabaseService {
     console.error('Error al obtener datos del paciente:', error);
     return null;
   }
-  const patientData = data.patients as { health_medical: string, second_profile_image_url: string };
+  const patientData = data.patients as { id: number, health_medical: string, second_profile_image_url: string };
   
   return {
      first_name: data.first_name,
@@ -216,11 +219,38 @@ export class DatabaseService {
       email: data.email,
       dni: data.dni,
       profile_image_url: data.profile_image_url,
+      id: patientData?.id || null,
       health_medical: patientData?.health_medical || null,
       second_profile_image_url: patientData?.second_profile_image_url || null
   };
 }
 
+async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[]> {
+  const { data, error } = await this.sb.supabase
+    .from('appointments')
+    .select(`
+      id,
+      appointment_date,
+      review,
+      rating,
+      specialties(name)
+    `)
+    .eq('patient_id', patientId)
+    .eq('status', 'realizado');
+  console.log('Datos de historia clínica:', data);
+  if (error) {
+    console.error('Error al obtener historia clínica:', error);
+    return [];
+  }
+
+  return data.map((row: any) => ({
+    id: row.id,
+    appointment_date: row.appointment_date,
+    review: row.review,
+    rating: row.rating,
+    specialty: row.specialties?.name ?? 'Sin especialidad'
+  }));
+}
   // ==================== SPECIALISTS ====================
   async getSpecialists(): Promise<any[]> {
     const { data, error } = await this.sb.supabase
@@ -321,6 +351,46 @@ export class DatabaseService {
     return data || [];
   }
 
+  async getRawSpecialistsWithAppointments(patientId: number): Promise<RawSpecialist[]> {
+    const rawAppointments = await this.getRawAppointmentsByPatientId(patientId);
+    const specialistIds = [...new Set(rawAppointments.map(a => a.specialist_id))];
+
+    const specialists: RawSpecialist[] = [];
+
+    for (const id of specialistIds) {
+      // 1. Obtener el user_id del especialista
+      const { data: specialistInfo, error: error1 } = await this.sb.supabase
+        .from('specialists')
+        .select('id, user_id')
+        .eq('id', id)
+        .single();
+
+      if (error1 || !specialistInfo?.user_id) continue;
+
+      // 2. Obtener los datos del usuario
+      const { data: userInfo, error: error2 } = await this.sb.supabase
+        .from('users')
+        .select('id, first_name, last_name, profile_image_url')
+        .eq('id', specialistInfo.user_id)
+        .single();
+
+      if (error2 || !userInfo) continue;
+
+      // 3. Armar el objeto RawSpecialist
+      specialists.push({
+        id: specialistInfo.id,
+        user: {
+          id: userInfo.id,
+          first_name: userInfo.first_name,
+          last_name: userInfo.last_name,
+          profile_image_url: userInfo.profile_image_url
+        }
+      });
+    }
+
+    return specialists;
+  }
+  
   async updateSpecialistStatus(specialistId: number, status: 'pendiente' | 'habilitado' | 'rechazado'): Promise<void> {
     const { error } = await this.sb.supabase
       .from('specialists')
@@ -427,7 +497,10 @@ export class DatabaseService {
         specialist_name: specialistName,
         specialty_name: specialtyName,
         survey_completed: a.survey_completed,
-        rating: a.rating
+        specialist_id: a.specialist_id,
+        rating: a.rating,
+        vital_signs: a.vital_signs,
+        extra_info: a.extra_info
       });
     }
 
@@ -439,6 +512,7 @@ export class DatabaseService {
       .from('appointments')
       .select(`
         id,
+        specialist_id,
         request_message,
         request_date,
         appointment_date,
@@ -467,6 +541,7 @@ export class DatabaseService {
         review: a.review,
         specialist_review: a.specialist_review,
         patient_name: '',
+        specialist_id: a.specialist_id,
         specialist_name: specialistUser
           ? `${specialistUser.first_name} ${specialistUser.last_name}`
           : 'Sin nombre',
@@ -475,37 +550,6 @@ export class DatabaseService {
         rating: a.rating
       };
     });
-  }
-
-  
-  async getSpecialistsAttendedByPatient(patientId: number): Promise<any[]> {
-    const { data, error } = await this.sb.supabase
-      .from('appointments')
-      .select(`specialist_id, specialist: specialist_id (
-          id,
-          user: users (
-            first_name,
-            last_name
-          )
-        )
-      `)
-      .eq('patient_id', patientId)
-      .eq('status', 'realizado')
-      .order('appointment_date', { ascending: false });
-    
-    if (error) throw error;
-    const unique = new Map<number, any>();
-
-    for (const item of data || []) {
-      const specialist = item.specialist?.[0];
-      if (specialist && !unique.has(specialist.id)) {
-        unique.set(specialist.id, {
-          id: specialist.id,
-          name: `${specialist.user?.[0]?.first_name} ${specialist.user?.[0]?.last_name}`
-        });
-      }
-    }
-    return Array.from(unique.values());
   }
 
   async getAppointmentsForPatientWithSpecialist(patientId: number, specialistId: number) {
@@ -561,7 +605,7 @@ export class DatabaseService {
     const { data, error } = await this.sb.supabase
       .from('appointments')
       .select(`
-        id, request_message, request_date, appointment_date, status, review, specialist_review, survey_completed, rating,
+        id, specialist_id, request_message, request_date, appointment_date, status, review, specialist_review, survey_completed, rating,
         specialist:specialists(id, user:users(first_name, last_name)),
         specialty:specialties(name)
       `)
@@ -583,6 +627,7 @@ export class DatabaseService {
       specialist_review: a.specialist_review,
       survey_completed: a.survey_completed,
       rating: a.rating,
+      specialist_id: a.specialist_id,
       specialist_name: `${a.specialist.user.first_name} ${a.specialist.user.last_name}`,
       patient_name: '',
       specialty_name: a.specialty.name,
@@ -604,7 +649,7 @@ export class DatabaseService {
     const { data, error } = await this.sb.supabase
       .from('appointments')
       .select(`
-        id, request_message, request_date, appointment_date, status, review, specialist_review,
+        id, specialist_id, request_message, request_date, appointment_date, status, review, specialist_review, vital_signs, extra_info,
         patient:patients(id, user:users(first_name, last_name)),
         specialty:specialties(name)
       `)
@@ -623,12 +668,15 @@ export class DatabaseService {
       appointment_date: a.appointment_date,
       status: a.status,
       review: a.review,
-      specialist_review: a.specialist_review,
+      specialist_review: a.specialist_review,   
       survey_completed: a.survey_completed ?? false,
       rating: a.rating,
+      specialist_id: a.specialist_id,
       specialist_name: '',
       patient_name: `${a.patient.user.first_name} ${a.patient.user.last_name}`,
       specialty_name: a.specialty.name,
+      vital_signs: a.vital_signs ?? undefined,
+      extra_info: a.extra_info ?? undefined
     }));
   }
 
@@ -649,14 +697,27 @@ export class DatabaseService {
     return true;
   }
 
-  async finalizeAppointment(id: number, specialist_review: string): Promise<boolean> {
-    const { error } = await this.sb.supabase
-    .from('appointments').update({ status: 'realizado', specialist_review}).eq('id', id).single();
+  async finalizeAppointment(id: number, data: FinalizeAppointmentData): Promise<boolean> {
+    const { specialist_review, vital_signs, extra_info } = data;
 
-    if(error){
+    const updates = {
+      status: 'realizado',
+      specialist_review,
+      vital_signs,
+      extra_info: extra_info ?? null
+    };
+
+    const { error } = await this.sb.supabase
+      .from('appointments')
+      .update(updates)
+      .eq('id', id)
+      .single();
+
+    if (error) {
       console.error('Error al finalizar el turno:', error);
       return false;
     }
+
     return true;
   }
 
@@ -768,23 +829,6 @@ export class DatabaseService {
 
     if (error) {
       console.error('Error al enviar la encuesta:', error);
-      return false;
-    }
-    return true;
-  }
-
-  async rateAppointment(appointmentId: number, comment: string, rating: number): Promise<boolean> {
-    const { error } = await this.sb.supabase
-      .from('appointments')
-      .update({ 
-        rating: rating,
-        review: comment,
-        survey_completed: true
-      })
-      .eq('id', appointmentId);
-
-    if (error) {
-      console.error('Error al calificar:', error);
       return false;
     }
     return true;

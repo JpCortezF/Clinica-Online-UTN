@@ -62,11 +62,18 @@
     <thead>
       <tr class="bg-blue-50 text-blue-900 text-left uppercase text-sm border-b-2 border-blue-100">
         <th class="px-4 py-3"><i class="far fa-calendar-alt mr-1"></i>Fecha turno</th>
-        <th class="px-4 py-3"><i class="far fa-comment-dots mr-1"></i>Mensaje</th>
+        <th class="px-4 py-3" *ngIf="filterStatus !== 'realizado'">
+          <i class="far fa-comment-dots mr-1"></i>Mensaje
+        </th>
         <th class="px-4 py-3"><i class="fas fa-user mr-1"></i>Paciente</th>
         <th class="px-4 py-3"><i class="fas fa-stethoscope mr-1"></i>Especialidad</th>
         <th class="px-4 py-3"><i class="fas fa-info-circle mr-1"></i>Estado</th>
-        <th class="px-4 py-3"><i class="fas fa-cogs mr-1"></i>Acciones</th>
+        <th class="px-4 py-3">
+          <ng-container *ngIf="filterStatus !== 'realizado'"><i class="fas fa-cogs mr-1"></i>Acciones</ng-container>
+          <ng-container *ngIf="filterStatus === 'realizado'"><i class="fas fa-book-open mr-1"></i>Reseña paciente</ng-container>
+        </th>
+        <th *ngIf="filterStatus === 'realizado'" class="px-4 py-3">Signos vitales</th>
+        <th *ngIf="filterStatus === 'realizado'" class="px-4 py-3">Info extra</th>
         <th class="px-4 py-3">Reseña</th>
       </tr>
     </thead>
@@ -76,7 +83,7 @@
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             {{ appt.appointment_date | date:'dd/MM/yyyy HH:mm' }}
           </td>       
-          <td class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message">
+          <td *ngIf="filterStatus !== 'realizado'" class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message">
             {{ appt.request_message || 'Sin mensaje' }}
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
@@ -133,6 +140,12 @@
               </div>
             </ng-container>
           </td>
+          <td *ngIf="filterStatus === 'realizado'" class="px-4 py-3">
+            <button class="text-blue-600 underline" (click)="openVitalModal(appt)">Ver</button>
+          </td>
+          <td *ngIf="filterStatus === 'realizado'" class="px-4 py-3">
+            <button class="text-blue-600 underline" (click)="openExtraInfoModal(appt)">Ver</button>
+          </td>
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 italic text-center">
             <i [ngClass]="appt.review !== 'Aún no disponible' ? 'fas fa-check-circle text-green-500' : 'fas fa-minus text-gray-300'"></i>
           </td>
@@ -162,7 +175,22 @@
         [showCancelButton]="modalConfig.showConfirmButton"
         [confirmButtonText]="modalConfig.confirmButtonText"
         (close)="closeModal()"
-        (confirm)="handleModalConfirm($event)">
+        (confirm)="handleModalConfirm($event)"
+        [showVitalSigns]="modalConfig.action === 'finalize'">
+      </app-modal-view>
+
+      <app-modal-view
+        *ngIf="showVitalsModal"
+        [title]="'Signos vitales'"
+        [content]="formatVitals(selectedAppointmentForVitals?.vital_signs)"
+        (close)="showVitalsModal = false">
+      </app-modal-view>
+
+      <app-modal-view
+        *ngIf="showExtraModal"
+        [title]="'Información extra'"
+        [content]="formatExtraInfo(selectedAppointmentForExtraInfo?.extra_info)"
+        (close)="showExtraModal = false">
       </app-modal-view>
     </tbody>
   </table>

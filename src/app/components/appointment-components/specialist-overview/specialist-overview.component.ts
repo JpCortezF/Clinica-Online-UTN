@@ -17,7 +17,13 @@ export class SpecialistOverviewComponent {
   appointments: Appointment[] = [];
   searchTerm = '';
   filterStatus: 'pendiente' | 'aceptado' | 'realizado' | 'cancelados' = 'pendiente';
-  
+
+  selectedAppointmentForVitals: Appointment | null = null;
+  showVitalsModal = false;
+
+  selectedAppointmentForExtraInfo: Appointment | null = null;
+  showExtraModal = false;
+
   modalConfig = {
     isVisible: false,
     title: '',
@@ -40,6 +46,7 @@ export class SpecialistOverviewComponent {
 
   private async loadAppointments(userId: number) {
     this.appointments = await this.db.getAppointmentsBySpecialist(userId);
+    console.log('Cargando turnos:', this.appointments);
   }
 
   filteredAppointments(): Appointment[] {
@@ -119,12 +126,27 @@ export class SpecialistOverviewComponent {
     };
   }
 
-  viewReview(review: string) {
+  viewReview(rawReview: string) {
+    let content = 'Sin reseña.';
+    try {
+      const review = JSON.parse(rawReview);
+      content = '';
+
+      if (review.comment) {
+        content += `📝 Reseña: ${review.comment}\n`;
+      }
+      if (review.rating) {
+        content += `⭐ Calificación: ${review.rating}/5\n`;
+      }
+    } catch (err) {
+      content = rawReview;
+    }
+
     this.modalConfig = {
       isVisible: true,
       title: 'Reseña del paciente',
       description: '',
-      content: review,
+      content,
       showInput: false,
       inputLabel: '',
       showConfirmButton: false,
@@ -170,13 +192,39 @@ export class SpecialistOverviewComponent {
         break;
         
       case 'finalize':
-        this.db.finalizeAppointment(this.modalConfig.appointmentId!, inputValue)
-          .then(handleSuccess);
+        try {
+        const data = JSON.parse(inputValue);
+          this.db.finalizeAppointment(this.modalConfig.appointmentId!, { specialist_review: data.comment, vital_signs: data.vitalSigns, extra_info: data.extraInfo }
+          ).then(handleSuccess);
+        } catch (err) {
+          console.error('Error al parsear datos del modal:', err);
+          this.closeModal();
+        }
         break;
     }
   }
 
   closeModal() {
     this.modalConfig.isVisible = false;
+  }
+
+  openVitalModal(appt: Appointment) {
+    this.selectedAppointmentForVitals = appt;
+    this.showVitalsModal = true;
+  }
+
+  openExtraInfoModal(appt: Appointment) {
+    this.selectedAppointmentForExtraInfo = appt;
+    this.showExtraModal = true;
+  }
+
+  formatVitals(vs: any): string {
+    if (!vs) return 'Sin datos';
+    return `Altura: ${vs.height} cm\nPeso: ${vs.weight} kg\nTemperatura: ${vs.temperature} °C\nPresión: ${vs.pressure}`;
+  }
+
+  formatExtraInfo(info: { key: string; value: string }[] | null | undefined = []): string {
+    if (!info || !info.length) return 'Sin información adicional.';
+    return info.map(i => `${i.key}: ${i.value}`).join('\n');
   }
 }

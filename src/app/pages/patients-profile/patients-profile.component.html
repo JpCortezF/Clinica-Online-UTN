@@ -42,29 +42,34 @@
           {{ patient.health_medical || 'No registrada' }}
         </p>
       </div>
-      <!-- <ng-container *ngIf="specialists.length > 0; else noAppointments">
-        <div class="mb-6 animate-fade-in" *ngIf="specialists.length > 0">
-          <label class="block text-gray-800 font-medium mb-2">
-            <i class="fas fa-user-md mr-2"></i>Seleccionar Profesional
-          </label>
-          <select [(ngModel)]="selectedSpecialistId"
-                  class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all">
-            <option [ngValue]="null" disabled selected>Seleccione un profesional</option>
-            <option *ngFor="let sp of specialists" [ngValue]="sp.id">
-              Dr./Dra. {{ sp.user.first_name }} {{ sp.user.last_name }}
-            </option>
-          </select>
-        </div>
-      </ng-container>
 
-      <ng-template #noAppointments>
-        <div class="text-gray-500 text-center py-10">
-          <p>No se han encontrado especialistas atendidos.</p>
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <i class="fas fa-file-medical-alt text-blue-600"></i>
+          Historia Clínica por Profesional
+        </h3>
+
+        <div class="flex flex-col gap-2 mt-2">
+          <label
+            *ngFor="let specialist of specialists"
+            class="cursor-pointer text-blue-700 hover:underline"
+            (click)="downloadPdfByProfessional(specialist)"
+          >
+            ● Descargar Historia Clínica {{ specialist.user.first_name }} {{ specialist.user.last_name }}
+          </label>
         </div>
-      </ng-template> -->
+      </div>
+    </div>
+    <div (click)="downloadPdfHistory()" class="fixed bottom-6 right-6 flex items-center space-x-3 z-50 cursor-pointer bg-gray-200 p-2 rounded-full hover:bg-gray-100 transition-all">
+      <!-- Botón flotante -->
+      <button
+              class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center">
+        <i class="fas fa-file-pdf text-xl"></i>
+      </button>
+      <!-- Texto flotante -->
+      <span class="text-sm text-blue-800 font-semibold hover:underline">Descargue su historia clínica</span>
     </div>
   </div>
-
   <ng-template #loadingTemplate>
     <div class="text-center py-10">
       <div class="flex justify-center items-center h-64">

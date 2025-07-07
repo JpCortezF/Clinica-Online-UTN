@@ -3,10 +3,11 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
 import { TreatedPatient } from '../../../interfaces/TreatedPatient';
 import { CompletedAppointment } from '../../../interfaces/CompletedAppointment';
 import { SpanishDatePipe } from '../../../pipes/spanish-date.pipe';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-modal-view',
-  imports: [CommonModule, SpanishDatePipe],
+  imports: [CommonModule, SpanishDatePipe, FormsModule, ReactiveFormsModule],
   templateUrl: './modal-view.component.html',
   styleUrl: './modal-view.component.css'
 })
@@ -18,6 +19,7 @@ export class ModalViewComponent {
   @Input() showInput: boolean = false;
   @Input() inputLabel: string = '';
   @Input() showRating: boolean = false;
+  @Input() action: 'survey' | null = null;
   @Input() currentRating: number = 0;
   hoverRating: number = 0;
   @Input() showConfirmButton: boolean = false;
@@ -32,6 +34,43 @@ export class ModalViewComponent {
   
   @Input() selectedPatient: TreatedPatient | null = null;
   @Input() patientAppointments: CompletedAppointment[] = [];
+
+  
+  @Input() showVitalSigns: boolean = false;
+  vitalSigns = {
+    height: null,
+    weight: null,
+    temperature: null,
+    pressure: ''
+  };
+  
+  extraFields: { key: string; value: string }[] = [];
+  vitalForm!: FormGroup;
+  inputError = false;
+
+  constructor(private fb: FormBuilder) {}
+  
+  ngOnInit(): void {
+    if (this.showVitalSigns) {
+      this.vitalForm = this.fb.group({
+        height: [null, [Validators.required, Validators.min(40)]],
+        weight: [null, [Validators.required, Validators.min(1)]],
+        temperature: [null, [Validators.required, Validators.min(27)]],
+        pressure: [null, Validators.required]
+      });
+    }
+  }
+  
+  isInvalid(controlName: string): boolean {
+    const ctrl = this.vitalForm?.get(controlName);
+    return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
+  }
+  
+  addExtraField() {
+    if (this.extraFields.length < 3) {
+      this.extraFields.push({ key: '', value: '' });
+    }
+  }
 
   setRating(star: number) {
     this.currentRating = star;
@@ -48,7 +87,6 @@ export class ModalViewComponent {
 
   get displayRating(): number {
     const rating = this.hoverRating || this.currentRating;
-    console.log('displayRating', rating);
     return rating;
   }
 
@@ -58,7 +96,40 @@ export class ModalViewComponent {
 
   onConfirm() {
     const inputValue = this.inputField?.nativeElement.value || '';
-    this.confirm.emit(inputValue);
+    this.inputError = false;
+
+    if (this.showInput && !inputValue) {
+      this.inputError = true;
+      return;
+    }
+
+    // Validar signos vitales si corresponde
+    if (this.showVitalSigns && this.vitalForm?.invalid) {
+      this.vitalForm.markAllAsTouched();
+      return;
+    }
+
+    const payload: any = {
+      comment: inputValue
+    };
+
+    // Solo incluir rating si la acción lo requiere
+    if (this.action !== 'survey' && this.currentRating > 0) {
+      payload.rating = this.currentRating;
+    }
+
+    // Solo incluir signos vitales si se mostraron y el form es válido
+    if (this.showVitalSigns && this.vitalForm?.valid) {
+      payload.vitalSigns = this.vitalForm.value;
+    }
+
+    // Incluir info extra si existe
+    const extra = this.extraFields.filter(f => f.key && f.value);
+    if (extra.length) {
+      payload.extraInfo = extra;
+    }
+
+    this.confirm.emit(JSON.stringify(payload));
   }
 
   formatDate(dateString: string): string {
@@ -68,6 +139,17 @@ export class ModalViewComponent {
       month: 'long',
       day: 'numeric'
     });
+  }
+
+  formatReview(review: string): string {
+    try {
+      const r = JSON.parse(review);
+      let result = '';
+      if (r.comment) result += `${r.comment}\n`;
+      return result.trim() || 'Sin reseña';
+    } catch {
+      return review || 'Sin reseña';
+    }
   }
 }
 
