@@ -57,7 +57,24 @@ export class PatientProfileComponent {
       doc.text(`Paciente: ${this.patient.first_name} ${this.patient.last_name}`, 50, 36);
 
       const appointments = await this.db.getFullAppointments(this.patient.id);
-      console.log('Turnos obtenidos:', appointments);
+      
+      const sorted = [...appointments].sort(
+        (a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime()
+      );
+
+      const lastWithVitals = sorted.find(a => a.vital_signs !== null && a.vital_signs !== undefined);
+
+      console.log('Last appointment with vitals:', lastWithVitals);
+      if (lastWithVitals?.vital_signs) {
+        const vs = lastWithVitals.vital_signs;
+
+        doc.setFontSize(10);
+        doc.text(`Altura: ${vs.height ?? '-'} cm`, 150, 20);
+        doc.text(`Peso: ${vs.weight ?? '-'} kg`, 150, 26);
+        doc.text(`Presión: ${vs.pressure ?? '-'}`, 150, 32);
+        doc.text(`Temperatura: ${vs.temperature ?? '-'} °C`, 150, 38);
+      }
+      
       if (!appointments.length) {
         doc.text('No se registran turnos realizados.', 14, 50);
       } else {
@@ -76,7 +93,6 @@ export class PatientProfileComponent {
           }
 
           const calificacion = a.rating ?? '-';
-
           let observaciones = '-';
           if (Array.isArray(a.extra_info) && a.extra_info.length > 0) {
             observaciones = a.extra_info.map((e: any) => `${e.key}: ${e.value}`).join(' | ');

@@ -1,5 +1,5 @@
 <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-  <!-- Filtros con iconos -->
+
   <div class="flex flex-wrap gap-3">
     <button (click)="filterStatus = 'pendiente'" 
             [ngClass]="{
@@ -46,15 +46,10 @@
     </button>
   </div>
 
-  <!-- Buscador con icono -->
-  <div class="relative w-full max-w-xs">
-    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <i class="fas fa-search text-gray-400"></i>
-    </div>
-    <input [(ngModel)]="searchTerm"
-           class="input w-full pl-10 pr-4 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-           placeholder="Buscar por paciente o especialidad..." />
-  </div>
+  <app-search-input
+    [placeholder]="'Buscar especialista, especialidad, mensaje...'"
+    (search)="searchTerm = $event">
+  </app-search-input>
 </div>
 
 <div class="overflow-x-auto rounded-lg border-2 border-gray-200 shadow-sm">
@@ -83,8 +78,8 @@
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             {{ appt.appointment_date | date:'dd/MM/yyyy HH:mm' }}
           </td>       
-          <td *ngIf="filterStatus !== 'realizado'" class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message">
-            {{ appt.request_message || 'Sin mensaje' }}
+          <td *ngIf="filterStatus !== 'realizado'" class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message | cancelMessage">
+            {{ appt.request_message | cancelMessage }}
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             <i class="fas fa-user mr-1 text-gray-500"></i>{{ appt.patient_name || 'Sin asignar' }}
@@ -130,7 +125,9 @@
             </ng-container>
 
             <ng-container *ngIf="appt.status === 'realizado' && appt.review">
-              <button (click)="viewReview(appt.review)" class="text-indigo-700 hover:underline inline-flex items-center gap-1">
+              <button 
+                (click)="viewReview(appt.review, appt.rating ?? null, appt.appointment_date)"
+                class="text-indigo-700 hover:underline inline-flex items-center gap-1">
                 <i class="fas fa-book-open"></i> Ver reseña
               </button>
             </ng-container>

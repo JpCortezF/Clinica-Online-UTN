@@ -4,10 +4,12 @@ import { Appointment } from '../../../interfaces/appointment';
 import { DatabaseService } from '../../../services/database.service';
 import { FormsModule } from '@angular/forms';
 import { ModalViewComponent } from "../modal-view/modal-view.component";
+import { CancelMessagePipe } from "../../../pipes/cancel-message.pipe";
+import { SearchInputComponent } from "../search-input/search-input.component";
 
 @Component({
   selector: 'app-specialist-overview',
-  imports: [CommonModule, FormsModule, ModalViewComponent],
+  imports: [CommonModule, FormsModule, ModalViewComponent, CancelMessagePipe, SearchInputComponent],
   templateUrl: './specialist-overview.component.html',
   styleUrl: './specialist-overview.component.css'
 })
@@ -46,23 +48,51 @@ export class SpecialistOverviewComponent {
 
   private async loadAppointments(userId: number) {
     this.appointments = await this.db.getAppointmentsBySpecialist(userId);
-    console.log('Cargando turnos:', this.appointments);
   }
 
   filteredAppointments(): Appointment[] {
     const term = this.searchTerm.toLowerCase();
 
     return this.appointments.filter(appt => {
-      const matchText =
-        appt.patient_name?.toLowerCase().includes(term) ||
-        appt.specialty_name?.toLowerCase().includes(term);
+      // Campos visibles o relevantes
+      const requestDate = appt.request_date?.toLowerCase() || '';
+      const appointmentDate = appt.appointment_date?.toLowerCase() || '';
+      const requestMessage = appt.request_message?.toLowerCase() || '';
+      const specialistName = appt.specialist_name?.toLowerCase() || '';
+      const specialtyName = appt.specialty_name?.toLowerCase() || '';
+      const status = appt.status?.toLowerCase() || '';
 
-      const matchStatus =
+      const reviewText = typeof appt.specialist_review === 'string'
+        ? appt.specialist_review.toLowerCase()
+        : '';
+
+      const vitalsText = appt.vital_signs
+        ? `altura: ${appt.vital_signs.height} peso: ${appt.vital_signs.weight} presión: ${appt.vital_signs.pressure} temperatura: ${appt.vital_signs.temperature}`.toLowerCase()
+        : '';
+
+      const extraInfoText = appt.extra_info
+        ? appt.extra_info.map(i => `${i.key}: ${i.value}`).join(' ').toLowerCase()
+        : '';
+
+      const matchesSearch =
+        requestDate.includes(term) ||
+        appointmentDate.includes(term) ||
+        requestMessage.includes(term) ||
+        specialistName.includes(term) ||
+        specialtyName.includes(term) ||
+        vitalsText.includes(term) ||
+        extraInfoText.includes(term) ||
+        reviewText.includes(term) ||
+        status.includes(term);
+
+      const matchesStatus =
         this.filterStatus === 'cancelados'
-          ? ['cancelado', 'rechazado'].includes(appt.status)
-          : appt.status === this.filterStatus;
+          ? appt.status === 'cancelado' || appt.status === 'rechazado'
+          : this.filterStatus === 'pendiente'
+            ? appt.status === 'pendiente' || appt.status === 'aceptado'
+            : appt.status === this.filterStatus;
 
-      return matchText && matchStatus;
+      return matchesSearch && matchesStatus;
     });
   }
 
@@ -126,20 +156,23 @@ export class SpecialistOverviewComponent {
     };
   }
 
-  viewReview(rawReview: string) {
-    let content = 'Sin reseña.';
+  viewReview(rawReview: string, rating: number | null, appointmentDate: string) {
+    let content = `📅 Fecha del turno: ${new Date(appointmentDate).toLocaleDateString('es-AR')}\n\n`;
+
     try {
       const review = JSON.parse(rawReview);
-      content = '';
 
       if (review.comment) {
-        content += `📝 Reseña: ${review.comment}\n`;
-      }
-      if (review.rating) {
-        content += `⭐ Calificación: ${review.rating}/5\n`;
+        content += `📝 Comentario: ${review.comment}\n`;
       }
     } catch (err) {
-      content = rawReview;
+      content += `📝 Comentario: ${rawReview}\n`;
+    }
+
+    if (rating !== null) {
+      content += `⭐ Calificación: ${rating}/5\n`;
+    } else {
+      content += `⭐ Calificación: No disponible\n`;
     }
 
     this.modalConfig = {

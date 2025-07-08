@@ -4,6 +4,7 @@ import { TreatedPatient } from '../../../interfaces/TreatedPatient';
 import { CompletedAppointment } from '../../../interfaces/CompletedAppointment';
 import { SpanishDatePipe } from '../../../pipes/spanish-date.pipe';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReviewContent } from '../../../interfaces/ReviewContent';
 
 @Component({
   selector: 'app-modal-view',
@@ -15,7 +16,7 @@ export class ModalViewComponent {
   @Input() title: string = '';
   @Input() description: string = '';
   @Input() specialistName: string = '';
-  @Input() content: string = '';
+  @Input() content!: string | ReviewContent;
   @Input() showInput: boolean = false;
   @Input() inputLabel: string = '';
   @Input() showRating: boolean = false;
@@ -34,7 +35,6 @@ export class ModalViewComponent {
   
   @Input() selectedPatient: TreatedPatient | null = null;
   @Input() patientAppointments: CompletedAppointment[] = [];
-
   
   @Input() showVitalSigns: boolean = false;
   vitalSigns = {
@@ -47,10 +47,12 @@ export class ModalViewComponent {
   extraFields: { key: string; value: string }[] = [];
   vitalForm!: FormGroup;
   inputError = false;
+  
 
   constructor(private fb: FormBuilder) {}
-  
+
   ngOnInit(): void {
+    console.log(this.content)
     if (this.showVitalSigns) {
       this.vitalForm = this.fb.group({
         height: [null, [Validators.required, Validators.min(40)]],
@@ -103,7 +105,6 @@ export class ModalViewComponent {
       return;
     }
 
-    // Validar signos vitales si corresponde
     if (this.showVitalSigns && this.vitalForm?.invalid) {
       this.vitalForm.markAllAsTouched();
       return;
@@ -113,17 +114,14 @@ export class ModalViewComponent {
       comment: inputValue
     };
 
-    // Solo incluir rating si la acción lo requiere
     if (this.action !== 'survey' && this.currentRating > 0) {
       payload.rating = this.currentRating;
     }
 
-    // Solo incluir signos vitales si se mostraron y el form es válido
     if (this.showVitalSigns && this.vitalForm?.valid) {
       payload.vitalSigns = this.vitalForm.value;
     }
 
-    // Incluir info extra si existe
     const extra = this.extraFields.filter(f => f.key && f.value);
     if (extra.length) {
       payload.extraInfo = extra;
@@ -150,6 +148,10 @@ export class ModalViewComponent {
     } catch {
       return review || 'Sin reseña';
     }
+  }
+
+  isObject(val: any): val is ReviewContent {
+    return typeof val === 'object' && val !== null && 'review' in val;
   }
 }
 

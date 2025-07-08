@@ -35,14 +35,10 @@
     </button>
   </div>
 
-  <div class="relative w-full max-w-xs">
-    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <i class="fas fa-search text-gray-400"></i>
-    </div>
-    <input [(ngModel)]="searchTerm" 
-           class="input w-full pl-10 pr-4 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" 
-           placeholder="Buscar especialista o especialidad..." />
-  </div>
+  <app-search-input
+    [placeholder]="'Buscar especialista, especialidad, mensaje...'"
+    (search)="searchTerm = $event">
+  </app-search-input>
 </div>
 
 <div class="overflow-x-auto rounded-lg border-2 border-gray-200 shadow-sm">
@@ -50,36 +46,71 @@
     <thead>
       <tr class="bg-blue-50 text-blue-900 text-left uppercase text-sm border-b-2 border-blue-100">
         <th class="px-4 py-3 whitespace-nowrap"><i class="far fa-calendar-alt mr-2"></i>Fecha solicitud</th>
-        <th class="px-4 py-3 whitespace-nowrap"><i class="far fa-comment-alt mr-2"></i>Mensaje</th>
-        <th class="px-4 py-3 whitespace-nowrap"><i class="far fa-clock mr-2"></i>Fecha turno</th>
+        <th *ngIf="filterStatus !== 'realizado'" class="px-4 py-3 whitespace-nowrap"><i class="far fa-clock mr-2"></i>Fecha turno</th>
+        <th *ngIf="filterStatus === 'pendiente'" class="px-4 py-3 whitespace-nowrap">
+          <i class="far fa-comment-alt mr-2"></i>Mensaje
+        </th>
         <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-user-md mr-2"></i>Especialista</th>
         <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-stethoscope mr-2"></i>Especialidad</th>
-        <th class="px-4 py-3 whitespace-nowrap"><i class="fas fa-info-circle mr-2"></i>Estado</th>
-        <th class="px-4 py-3 whitespace-nowrap">Acciones</th>
-        <th class="px-4 py-3 whitespace-nowrap">Reseña Especialista</th>
+        <th *ngIf="filterStatus === 'realizado'" class="px-4 py-3 whitespace-nowrap">
+          <i class="fas fa-heartbeat mr-2"></i>Signos vitales
+        </th>
+        <th *ngIf="filterStatus === 'realizado'" class="px-4 py-3 whitespace-nowrap">
+          <i class="fas fa-notes-medical mr-2"></i>Info extra
+        </th>
+        <th *ngIf="filterStatus !== 'pendiente'" class="px-4 py-3 whitespace-nowrap">Reseña Especialista</th>
+        <th class="px-4 py-3"><i class="fas fa-info-circle mr-1"></i>Estado</th>
+        <th class="px-4 py-3">
+          <ng-container *ngIf="filterStatus !== 'realizado'">Acciones</ng-container>
+          <ng-container *ngIf="filterStatus === 'realizado'">Atención</ng-container>
+        </th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
       <ng-container *ngIf="filteredAppointments().length > 0; else noAppointments">
         <tr *ngFor="let appt of filteredAppointments()" class="hover:bg-blue-50 transition-colors">
           <!-- Columnas existentes -->
-          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          <td *ngIf="filterStatus !== 'realizado'" class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             {{ appt.request_date | date:'dd/MM/yyyy' }}
-          </td>
-          <td class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message">
-            {{ appt.request_message || 'Sin mensaje' }}
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             {{ appt.appointment_date | date:'dd/MM/yyyy HH:mm' }}
+          </td>
+          <td *ngIf="filterStatus === 'pendiente'" class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" [title]="appt.request_message | cancelMessage">
+            {{ appt.request_message | cancelMessage }}
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             <i class="fas fa-user mr-1"></i> {{ appt.specialist_name || 'Sin asignar' }}
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
             {{ appt.specialty_name }}
+          </td>        
+          <!-- Signos vitales -->
+          <td *ngIf="filterStatus === 'realizado'" class="px-4 py-2 relative">
+            <button class="text-blue-600 underline" (click)="openVitalModal(appt)">Ver</button>
+            <span class="hidden">{{ formatVitals(appt.vital_signs) }}</span>
+          </td>
+
+          <td *ngIf="filterStatus === 'realizado'" class="px-4 py-2 relative">
+            <button class="text-blue-600 underline" (click)="openExtraInfoModal(appt)">Ver</button>
+            <span class="hidden">{{ formatExtraInfo(appt.extra_info) }}</span>
+          </td>
+          
+          <!-- Columna de Reseña -->
+          <td *ngIf="filterStatus !== 'pendiente'" class="px-4 py-3 whitespace-nowrap text-sm">
+            <ng-container *ngIf="appt.specialist_review && appt.specialist_review !== 'Aún no disponible'; else noReview">
+              <button (click)="viewReview(appt)"
+              class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+              <i class="fas fa-book-open"></i>
+              <span class="underline">Ver</span>
+            </button>
+            </ng-container>
+            <ng-template #noReview>
+              <span class="text-gray-400 text-xs italic">Sin reseña</span>
+            </ng-template>
           </td>
           <td class="px-4 py-3 whitespace-nowrap">
-            <span [ngClass]="{
+          <span [ngClass]="{
               'bg-yellow-100 text-yellow-800': appt.status === 'pendiente',
               'bg-blue-100 text-blue-800': appt.status === 'aceptado',
               'bg-green-100 text-green-800': appt.status === 'realizado',
@@ -94,29 +125,27 @@
               {{ appt.status | titlecase }}
             </span>
           </td>
-
           <!-- Columna de Acciones -->
           <td class="px-4 py-3 whitespace-nowrap space-x-2">
-            <ng-container *ngIf="appt.status === 'aceptado'">
+            <ng-container *ngIf="appt.status === 'pendiente' || appt.status === 'aceptado'">
               <button (click)="cancelAppointment(appt.id)" class="cancel-btn">
                 <i class="fas fa-times-circle mr-1"></i> Cancelar
               </button>
             </ng-container>
-
+            
             <ng-container *ngIf="appt.status === 'cancelado' || appt.status === 'rechazado'">
               <button (click)="deleteAppointment(appt.id)" class="delete-btn">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </ng-container>
-
-            <!-- Calificar o mostrar rating -->
+    
             <ng-container *ngIf="appt.status === 'realizado' && appt.survey_completed && appt.rating">
               <div class="inline-flex items-center bg-yellow-50 px-2 py-1 rounded-full text-yellow-700">
                 <span class="text-sm font-medium mr-1">{{appt.rating}}/5</span>
                 <i class="fas fa-star text-sm"></i>
               </div>
             </ng-container>
-
+    
             <ng-container *ngIf="appt.status === 'realizado' && !appt.survey_completed">
               <button (click)="completeSurvey(appt.id)" class="survey-btn">
                 <i class="fas fa-clipboard-list"></i>
@@ -124,23 +153,9 @@
               </button>
             </ng-container>
           </td>
-
-          <!-- Columna de Reseña -->
-          <td class="px-4 py-3 whitespace-nowrap text-sm">
-            <ng-container *ngIf="appt.specialist_review && appt.specialist_review !== 'Aún no disponible'; else noReview">
-              <button (click)="viewReview(appt.specialist_review)"
-                      class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                <i class="fas fa-book-open"></i>
-                <span class="underline">Ver</span>
-              </button>
-            </ng-container>
-            <ng-template #noReview>
-              <span class="text-gray-400">—</span>
-            </ng-template>
-          </td>
         </tr>
       </ng-container>
-
+      
       <ng-template #noAppointments>
         <tr>
           <td colspan="8" class="px-4 py-8 text-center">
@@ -154,7 +169,7 @@
       </ng-template>
 
       <app-modal-view
-        *ngIf="showReviewModal"
+        *ngIf="showReviewModal && currentReview"
         [title]="'Reseña del especialista'"
         [content]="currentReview"
         (close)="showReviewModal = false">
@@ -177,6 +192,20 @@
         (close)="closeModal()"
         (confirm)="handleModalConfirm($event)"
         (ratingChange)="setRating($event)">
+      </app-modal-view>
+
+      <app-modal-view
+        *ngIf="showVitalsModal"
+        [title]="'Signos vitales'"
+        [content]="formatVitals(selectedAppointmentForVitals?.vital_signs)"
+        (close)="showVitalsModal = false">
+      </app-modal-view>
+
+      <app-modal-view
+        *ngIf="showExtraModal"
+        [title]="'Información extra'"
+        [content]="formatExtraInfo(selectedAppointmentForExtraInfo?.extra_info)"
+        (close)="showExtraModal = false">
       </app-modal-view>
     </tbody>
   </table>

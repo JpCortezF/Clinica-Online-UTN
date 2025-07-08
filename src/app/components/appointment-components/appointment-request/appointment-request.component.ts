@@ -32,6 +32,7 @@ export class AppointmentRequestComponent {
       specialistId: ['', Validators.required],
       date: ['', Validators.required],
       time: ['', Validators.required],
+      reason: ['']
     });
     this.loadSpecialties();
 
@@ -203,15 +204,15 @@ export class AppointmentRequestComponent {
 
     try {
       const conflict = await this.db.checkAppointmentConflict(form.specialistId, appointmentDate);
-
+      
       if (conflict) {
-        alert('Ese turno ya fue asignado. Elegí otro horario.');
+        console.log('Ese turno ya fue asignado. Elegí otro horario.');
         return;
       }
 
       const patientId = await this.db.getPatientIdByUserId(this.user.id);
 
-      await this.db.insertAppointment(patientId, form.specialistId, form.specialtyId, appointmentDate);
+      await this.db.insertAppointment(form.reason?.trim() || null, patientId, form.specialistId, form.specialtyId, appointmentDate);
 
       console.log('¡Turno solicitado con éxito!');
       this.appointmentForm.reset();

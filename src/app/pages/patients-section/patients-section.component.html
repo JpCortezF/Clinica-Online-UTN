@@ -1,20 +1,21 @@
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-20">
-  <div *ngIf="isLoading" class="flex justify-center items-center h-64">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-  </div>
   <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
       <h1 class="text-4xl md:text-5xl font-bold text-center text-blue-500 mb-2">Pacientes</h1>
       <p class="text-center text-gray-600 text-lg">Visualiza el perfil de los pacientes atendidos</p>
   </div>
+  <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
   <div *ngIf="!isLoading && patients.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:pt-12 pt-8">
     <app-card-profile 
       *ngFor="let patient of patients"
+      class="fade-scale-in"
       [profile]="patient"
       [showDetails]="true"
       (clicked)="selectPatient(patient)">
     </app-card-profile>
   </div>
-  
+
   <div *ngIf="!isLoading && patients.length === 0" class="text-center text-gray-500 text-sm">
     No se encontraron pacientes atendidos.
   </div>

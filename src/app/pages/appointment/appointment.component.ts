@@ -18,10 +18,9 @@ export class AppointmentComponent {
   db = inject(DatabaseService);
   appointments: any[] = [];
   user: any = null;
-  searchTerm = '';
   viewMode: 'form' | 'list' = 'list';
-  isLoading = true;
   isPatient = false;
+  submittedWithSuccess = false;
 
   async ngOnInit() {
     while (!this.userSession.getUser()) {
@@ -33,37 +32,18 @@ export class AppointmentComponent {
       this.isPatient = true;
     }
     this.loadAppointments();
-    this.isLoading = false;
   }
 
   async loadAppointments(){
     this.appointments = await this.db.getAppointmentsByPatientId(this.user.id);
   }
 
-  async cancelAppointment(id: number) {
-    const motivo = prompt('¿Por qué deseas cancelar el turno?');
-    if (!motivo) return;
+  onAppointmentSubmitted() {
+    this.submittedWithSuccess = true;
+    this.viewMode = 'list';
 
-    await this.db.sb.supabase
-      .from('appointments')
-      .update({ status: 'cancelado', cancel_comment: motivo })
-      .eq('id', id);
-
-    this.loadAppointments();
-  }
-
-  async rateAppointment(id: number) {
-    const comentario = prompt('¿Cómo fue la atención del especialista?');
-    const rating = prompt('¿Qué calificación le das del 1 al 5?');
-    const score = parseInt(rating || '0', 10);
-
-    if (!comentario || isNaN(score) || score < 1 || score > 5) return;
-
-    await this.db.sb.supabase
-      .from('appointments')
-      .update({ review: comentario, rating: score })
-      .eq('id', id);
-
-    this.loadAppointments();
+    setTimeout(() => {
+      this.submittedWithSuccess = false;
+    }, 500);
   }
 }

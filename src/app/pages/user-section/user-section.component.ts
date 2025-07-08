@@ -6,6 +6,7 @@ import { saveAs } from 'file-saver';
 import { CardProfileComponent } from "../../components/profile-components/card-profile/card-profile.component";
 import { ModalViewComponent } from "../../components/appointment-components/modal-view/modal-view.component";
 import { TreatedPatient } from '../../interfaces/TreatedPatient';
+import { CancelMessagePipe } from '../../pipes/cancel-message.pipe';
 
 @Component({
   selector: 'app-user-section',
@@ -105,13 +106,14 @@ export class UserSectionComponent {
         this.showNoAppointmentsModal = true;
         return;
       }
-
+      const messagePipe = new CancelMessagePipe();
+      
       const data = appointments.map(appt => ({
         Fecha: new Date(appt.appointment_date).toLocaleString(),
         Especialista: appt.specialist_name,
         Especialidad: appt.specialty_name,
         Estado: appt.status,
-        Reseña: appt.review ?? '',
+        Review: messagePipe.transform(appt.review),
         Calificación: appt.rating ?? ''
       }));
 

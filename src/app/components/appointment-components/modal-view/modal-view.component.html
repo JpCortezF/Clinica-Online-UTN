@@ -1,4 +1,4 @@
-<div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50" (click)="onClose()">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 modal-fade-in" (click)="onClose()">
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl relative" (click)="$event.stopPropagation()">
     <!-- Título y descripción -->
     <h2 class="text-2xl font-bold mb-2">{{ title }}</h2>
@@ -29,8 +29,35 @@
       </ul>
     </div>
 
-    <div *ngIf="content" class="text-gray-700 whitespace-pre-line bg-gray-50 p-3 rounded mb-4 mt-6">
-      {{ content }}
+    <div *ngIf="isObject(content)">
+      <div class="bg-gray-50 rounded-lg p-4 shadow-inner border border-gray-200 text-sm text-gray-800">
+        <p class="mb-2"><strong>Fecha del turno:</strong> {{ content.appointment_date | date:'dd/MM/yyyy' }}</p>
+
+        <p class="mb-2"><strong>Reseña:</strong> {{ content.review }}</p>
+
+        <div *ngIf="content.vital_signs" class="mb-2">
+          <p><strong>Signos vitales:</strong></p>
+          <ul class="ml-4">
+            <li>Altura: {{ content.vital_signs.height }} cm</li>
+            <li>Peso: {{ content.vital_signs.weight }} kg</li>
+            <li>Presión: {{ content.vital_signs.pressure }}</li>
+            <li>Temperatura: {{ content.vital_signs.temperature }} °C</li>
+          </ul>
+        </div>
+
+        <div *ngIf="content.extra_info?.length">
+          <p><strong>Datos adicionales:</strong></p>
+          <ul class="ml-4">
+            <li *ngFor="let item of content.extra_info">
+              {{ item.key }}: {{ item.value }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!isObject(content) && content" class="text-gray-700 whitespace-pre-line bg-gray-50 p-3 rounded mb-4 mt-6">
+      <p>{{ content }}</p>
     </div>
 
     <div class="mt-8 pt-4"></div>

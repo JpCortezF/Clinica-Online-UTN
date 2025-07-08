@@ -123,15 +123,18 @@
       </tbody>
     </table>
     <ng-container *ngIf="selectedTab === 'todos' && allUsers.length > 0">
-      <button (click)="downloadAllUsersExcel()"
-          class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50">
-        <i class="fas fa-file-excel text-xl"></i>
-      </button>
+      <div (click)="downloadAllUsersExcel()" class="fixed bottom-6 right-6 flex items-center space-x-3 z-50 cursor-pointer bg-gray-300 p-2 rounded-full hover:bg-gray-200 transition-all">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50">
+          <i class="fas fa-file-excel text-xl"></i>
+        </button>
+        <span class="text-sm text-blue-800 font-semibold hover:underline">Descargue información de los usuarios</span>
+      </div>
     </ng-container>
 
     <ng-container *ngIf="selectedTab === 'pacientes' && patients.length > 0">
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
         <app-card-profile *ngFor="let p of patients"
+          class="fade-scale-in"
           [profile]="p.user"
           [showDetails]="true"
           (clicked)="confirmDownloadHistory(p)">

@@ -4,10 +4,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../../services/database.service';
 import { ModalViewComponent } from '../modal-view/modal-view.component';
+import { CancelMessagePipe } from "../../../pipes/cancel-message.pipe";
+import { SearchInputComponent } from "../search-input/search-input.component";
 
 @Component({
   selector: 'app-appointment-overview',
-  imports: [CommonModule, FormsModule, ModalViewComponent],
+  imports: [CommonModule, FormsModule, ModalViewComponent, CancelMessagePipe, SearchInputComponent],
   templateUrl: './appointment-overview.component.html',
   styleUrl: './appointment-overview.component.css'
 })
@@ -18,8 +20,24 @@ export class AppointmentOverviewComponent {
   searchTerm = '';
   filterStatus: 'pendiente' | 'realizado' | 'cancelados' | 'aceptado' | 'rechazado' = 'pendiente';
 
+  selectedAppointmentForVitals: Appointment | null = null;
+  showVitalsModal = false;
+
+  selectedAppointmentForExtraInfo: Appointment | null = null;
+  showExtraModal = false;
+
   showReviewModal = false;
-  currentReview: string = '';
+  currentReview: {
+    review: string;
+    appointment_date: string;
+    vital_signs?: {
+      height: number;
+      weight: number;
+      temperature: number;
+      pressure: string;
+    } | null;
+    extra_info?: { key: string; value: string }[] | null;
+  } | null = null;
 
   modalConfig = {
     isVisible: false,
@@ -52,16 +70,43 @@ export class AppointmentOverviewComponent {
     const term = this.searchTerm.toLowerCase();
 
     return this.appointments.filter(appt => {
+      // Campos visibles o relevantes
+      const requestDate = appt.request_date?.toLowerCase() || '';
+      const appointmentDate = appt.appointment_date?.toLowerCase() || '';
+      const requestMessage = appt.request_message?.toLowerCase() || '';
+      const specialistName = appt.specialist_name?.toLowerCase() || '';
+      const specialtyName = appt.specialty_name?.toLowerCase() || '';
+      const status = appt.status?.toLowerCase() || '';
+
+      const reviewText = typeof appt.specialist_review === 'string'
+        ? appt.specialist_review.toLowerCase()
+        : '';
+
+      const vitalsText = appt.vital_signs
+        ? `altura: ${appt.vital_signs.height} peso: ${appt.vital_signs.weight} presión: ${appt.vital_signs.pressure} temperatura: ${appt.vital_signs.temperature}`.toLowerCase()
+        : '';
+
+      const extraInfoText = appt.extra_info
+        ? appt.extra_info.map(i => `${i.key}: ${i.value}`).join(' ').toLowerCase()
+        : '';
+
       const matchesSearch =
-        appt.specialist_name.toLowerCase().includes(term) ||
-        appt.specialty_name.toLowerCase().includes(term);
+        requestDate.includes(term) ||
+        appointmentDate.includes(term) ||
+        requestMessage.includes(term) ||
+        specialistName.includes(term) ||
+        specialtyName.includes(term) ||
+        vitalsText.includes(term) ||
+        extraInfoText.includes(term) ||
+        reviewText.includes(term) ||
+        status.includes(term);
 
       const matchesStatus =
-      this.filterStatus === 'cancelados'
-        ? appt.status === 'cancelado' || appt.status === 'rechazado'
-        : this.filterStatus === 'pendiente'
-          ? appt.status === 'pendiente' || appt.status === 'aceptado'
-          : appt.status === this.filterStatus;
+        this.filterStatus === 'cancelados'
+          ? appt.status === 'cancelado' || appt.status === 'rechazado'
+          : this.filterStatus === 'pendiente'
+            ? appt.status === 'pendiente' || appt.status === 'aceptado'
+            : appt.status === this.filterStatus;
 
       return matchesSearch && matchesStatus;
     });
@@ -96,8 +141,13 @@ export class AppointmentOverviewComponent {
     if (success) await this.reloadAppointments();
   }
 
-  viewReview(review: string) {
-    this.currentReview = review;
+  viewReview(appt: Appointment) {
+    this.currentReview = {
+      review: appt.specialist_review ?? 'Sin reseña registrada.',
+      appointment_date: appt.appointment_date,
+      vital_signs: appt.vital_signs ?? null,
+      extra_info: appt.extra_info ?? null
+    };
     this.showReviewModal = true;
   }
 
@@ -161,5 +211,25 @@ export class AppointmentOverviewComponent {
 
   setRating(rating: number) {
     this.modalConfig.currentRating = rating;
+  }
+
+  openVitalModal(appt: Appointment) {
+    this.selectedAppointmentForVitals = appt;
+    this.showVitalsModal = true;
+  }
+
+  openExtraInfoModal(appt: Appointment) {
+    this.selectedAppointmentForExtraInfo = appt;
+    this.showExtraModal = true;
+  }
+
+  formatVitals(vs: any): string {
+    if (!vs) return 'Sin datos';
+    return `Altura: ${vs.height} cm\nPeso: ${vs.weight} kg\nTemperatura: ${vs.temperature} °C\nPresión: ${vs.pressure}`;
+  }
+
+  formatExtraInfo(info: { key: string; value: string }[] | null | undefined = []): string {
+    if (!info || !info.length) return 'Sin información adicional.';
+    return info.map(i => `${i.key}: ${i.value}`).join('\n');
   }
 }

@@ -574,10 +574,11 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
     return data.length > 0;
   }
 
-  async insertAppointment(patientId: number, specialistId: number, specialtyId: number, appointmentDate: string): Promise<void> {
+  async insertAppointment(reasonForVisit: string | null, patientId: number, specialistId: number, specialtyId: number, appointmentDate: string): Promise<void> {
     const { error } = await this.sb.supabase
       .from('appointments')
       .insert({
+        request_message: reasonForVisit,
         patient_id: patientId,
         specialist_id: specialistId,
         specialty_id: specialtyId,
@@ -605,7 +606,7 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
     const { data, error } = await this.sb.supabase
       .from('appointments')
       .select(`
-        id, specialist_id, request_message, request_date, appointment_date, status, review, specialist_review, survey_completed, rating,
+        id, specialist_id, request_message, request_date, appointment_date, status, review, specialist_review, survey_completed, rating, vital_signs, extra_info,
         specialist:specialists(id, user:users(first_name, last_name)),
         specialty:specialties(name)
       `)
@@ -616,7 +617,6 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
       console.error('Error obteniendo turnos:', error);
       return [];
     }
-
     return data.map((a: any) => ({
       id: a.id,
       request_message: a.request_message,
@@ -626,6 +626,8 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
       review: a.review,
       specialist_review: a.specialist_review,
       survey_completed: a.survey_completed,
+      vital_signs: a.vital_signs,
+      extra_info: a.extra_info,
       rating: a.rating,
       specialist_id: a.specialist_id,
       specialist_name: `${a.specialist.user.first_name} ${a.specialist.user.last_name}`,
@@ -649,7 +651,7 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
     const { data, error } = await this.sb.supabase
       .from('appointments')
       .select(`
-        id, specialist_id, request_message, request_date, appointment_date, status, review, specialist_review, vital_signs, extra_info,
+        id, specialist_id, request_message, request_date, appointment_date, status, review, specialist_review, rating, vital_signs, extra_info,
         patient:patients(id, user:users(first_name, last_name)),
         specialty:specialties(name)
       `)
@@ -682,7 +684,7 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
 
   async updateAppointmentStatus(appointmentId: number, status: string, reason?: string): Promise<boolean> {
     const updateData: any = { status };
-    if (reason) updateData.specialist_review = reason;
+    if (reason) updateData.request_message = reason;
 
     const { error } = await this.sb.supabase
       .from('appointments')

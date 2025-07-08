@@ -5,7 +5,6 @@
       <p class="text-center text-blue-100 text-lg">Gestiona tus turnos médicos</p>
     </div>
 
-    <!-- Selector de vista (solo para pacientes) -->
     <div *ngIf="isPatient" class="flex justify-center">
       <div class="inline-flex rounded-lg bg-white/20 p-1 backdrop-blur-sm border border-white/20">
         <button 
@@ -30,15 +29,28 @@
     <!-- Contenido dinámico -->
     <div class="transition-all duration-300 ease-in-out">
       <ng-container *ngIf="viewMode === 'form'">
-        <app-appointment-request *ngIf="user" [user]="user" (appointmentSubmitted)="viewMode = 'list'" class="block animate-fadeIn"></app-appointment-request>
+        <app-appointment-request 
+          *ngIf="user" 
+          [user]="user" 
+          (appointmentSubmitted)="onAppointmentSubmitted()" 
+          class="block fade-slide-in">
+        </app-appointment-request>
       </ng-container>
 
       <ng-container *ngIf="viewMode === 'list' && isPatient">
-        <app-appointment-overview *ngIf="user" [user]="user" class="block animate-fadeIn"></app-appointment-overview>
+        <app-appointment-overview 
+          *ngIf="user" 
+          [user]="user" 
+          class="block fade-slide-in">
+        </app-appointment-overview>
       </ng-container>
 
       <ng-container *ngIf="viewMode === 'list' && !isPatient">
-        <app-specialist-overview *ngIf="user" [user]="user" class="block animate-fadeIn"></app-specialist-overview>
+        <app-specialist-overview 
+          *ngIf="user" 
+          [user]="user" 
+          class="block fade-slide-in">
+        </app-specialist-overview>
       </ng-container>
     </div>
   </div>

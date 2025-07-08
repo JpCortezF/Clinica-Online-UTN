@@ -1,0 +1,9 @@
+<div class="relative w-full max-w-xs">
+  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+    <i class="fas fa-search text-gray-400"></i>
+  </div>
+  <input [(ngModel)]="searchTerm"
+         (ngModelChange)="onInputChange()"
+         class="input w-full pl-10 pr-4 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+         [placeholder]="placeholder" />
+</div>
