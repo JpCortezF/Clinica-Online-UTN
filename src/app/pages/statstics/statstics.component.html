@@ -1,0 +1,31 @@
+<div class="min-h-screen bg-gradient-to-b from-blue-800 to-blue-600 pt-16 pb-10 px-4">
+  <div class="max-w-6xl mx-auto">
+    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
+      <h1 class="text-4xl font-bold text-white text-center mb-4">Estadísticas del Sistema</h1>
+      <p class="text-blue-100 text-center text-lg mb-8">Informes visuales para el administrador</p>
+
+      <!-- Tabs con animación facha -->
+      <div class="flex flex-wrap justify-center gap-4 mb-6">
+        <button *ngFor="let tab of tabs"
+                (click)="selectedTab = tab.id"
+                [ngClass]="{
+                  'bg-white text-blue-700 shadow-md scale-105': selectedTab === tab.id,
+                  'bg-white/20 text-white hover:bg-white/30 hover:text-blue-100': selectedTab !== tab.id
+                }"
+                class="px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out backdrop-blur-sm border border-white/30">
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- Contenido según tab -->
+      <div [ngSwitch]="selectedTab">
+        <app-log-activity *ngSwitchCase="'log'"></app-log-activity>
+        <!-- <app-stats-by-specialty *ngSwitchCase="'specialty'"></app-stats-by-specialty>
+        <app-stats-by-day *ngSwitchCase="'day'"></app-stats-by-day>
+        <app-stats-by-doctor-requested *ngSwitchCase="'requested'"></app-stats-by-doctor-requested>
+        <app-stats-by-doctor-finalized *ngSwitchCase="'finalized'"></app-stats-by-doctor-finalized> -->
+        <div *ngSwitchDefault class="text-white text-center">Seleccione un informe para visualizar</div>
+      </div>
+    </div>
+  </div>
+</div>

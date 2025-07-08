@@ -5,22 +5,22 @@
     <!-- Tabs -->
     <div class="flex space-x-4 mb-6">
       <button class="px-4 py-2 rounded-md text-sm font-medium"
-              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'todos', 'bg-gray-200': selectedTab !== 'todos' }"
+              [ngClass]="{ 'bg-blue-600 text-white transition-all duration-300 ease-in-out backdrop-blur-sm': selectedTab === 'todos', 'bg-gray-200': selectedTab !== 'todos' }"
               (click)="selectedTab = 'todos'">
         Todos
       </button>
       <button class="px-4 py-2 rounded-md text-sm font-medium"
-              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'especialistas', 'bg-gray-200': selectedTab !== 'especialistas' }"
+              [ngClass]="{ 'bg-blue-600 text-white transition-all duration-300 ease-in-out backdrop-blur-sm': selectedTab === 'especialistas', 'bg-gray-200': selectedTab !== 'especialistas' }"
               (click)="selectedTab = 'especialistas'">
         Especialistas
       </button>
       <button class="px-4 py-2 rounded-md text-sm font-medium"
-              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'pacientes', 'bg-gray-200': selectedTab !== 'pacientes' }"
+              [ngClass]="{ 'bg-blue-600 text-white transition-all duration-300 ease-in-out backdrop-blur-sm': selectedTab === 'pacientes', 'bg-gray-200': selectedTab !== 'pacientes' }"
               (click)="selectedTab = 'pacientes'">
         Pacientes
       </button>
       <button class="px-4 py-2 rounded-md text-sm font-medium"
-              [ngClass]="{ 'bg-blue-600 text-white': selectedTab === 'admin', 'bg-gray-200': selectedTab !== 'admin' }"
+              [ngClass]="{ 'bg-blue-600 text-white transition-all duration-300 ease-in-out backdrop-blur-sm': selectedTab === 'admin', 'bg-gray-200': selectedTab !== 'admin' }"
               (click)="selectedTab = 'admin'">
         Administradores
       </button>

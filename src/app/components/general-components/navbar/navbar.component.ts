@@ -14,7 +14,7 @@ import { UserService } from '../../../services/user.service';
 })
 
 export class NavbarComponent {
-  user: any = null;
+  user: any | null = null;
   auth = inject(AuthService);
   router = inject(Router);
   userSession = inject(UserService);
@@ -32,7 +32,7 @@ export class NavbarComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
-      setTimeout(() => initFlowbite(), 100);
+      setTimeout(() => initFlowbite(), 300);
     });
   }
 
@@ -85,6 +85,13 @@ export class NavbarComponent {
     if (this.user) {
       this.userSession.setUser(this.user);
       this.router.navigate(['/account']);
+    }
+  }
+
+  goToStatstics() {
+    if (this.user) {
+      this.userSession.setUser(this.user);
+      this.router.navigate(['/statstics']);
     }
   }
 

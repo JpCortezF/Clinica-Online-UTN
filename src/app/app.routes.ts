@@ -11,4 +11,5 @@ export const routes: Routes = [
   { path: 'patients-profile', loadComponent: () => import('./pages/patients-profile/patients-profile.component').then((archivo) => archivo.PatientProfileComponent)},
   { path: 'patients-section', loadComponent: () => import('./pages/patients-section/patients-section.component').then((archivo) => archivo.PatientsSectionComponent)},
   { path: 'appointment',  loadComponent: () => import('./pages/appointment/appointment.component').then((archivo) => archivo.AppointmentComponent)},
+  { path: 'statstics', loadComponent: () => import('./pages/statstics/statstics.component').then((archivo) => archivo.StatsticsComponent)},
 ];

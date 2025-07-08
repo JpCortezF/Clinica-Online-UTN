@@ -12,10 +12,11 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   router = inject(Router);
-  authReady = this.initializeAuth();
+  authReady: Promise<void>;
+  private isLoggingIn = false;
 
   constructor() { 
-    this.initializeAuth();
+    this.authReady = this.initializeAuth();
   }
 
   private async initializeAuth(): Promise<void> {
@@ -38,8 +39,23 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const { data, error } = await this.sb.supabase.auth.signInWithPassword({ email, password });
-    return { data, error };
+    if (this.isLoggingIn) return { data: null };
+    this.isLoggingIn = true;
+
+    try {
+        const { data, error } = await this.sb.supabase.auth.signInWithPassword({ email, password });
+
+        if (data?.user && !error) {
+            await this.sb.supabase.from('logins').insert({
+                user_id: data.user.id,
+                email: data.user.email,
+            });
+        }
+
+        return { data, error };
+    } finally {
+        this.isLoggingIn = false;
+    }
   }
 
   async logout() {

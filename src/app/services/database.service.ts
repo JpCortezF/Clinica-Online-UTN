@@ -9,6 +9,7 @@ import { TreatedPatient } from '../interfaces/TreatedPatient';
 import { CompletedAppointment } from '../interfaces/CompletedAppointment';
 import { FinalizeAppointmentData } from '../interfaces/FinalizeAppointmentData';
 import { RawSpecialist } from '../interfaces/RawSpecialist';
+import { LoginWithUser } from '../interfaces/LoginWithUser';
 
 @Injectable({
   providedIn: 'root'
@@ -777,6 +778,23 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
     }
 
     return Array.from(uniqueMap.values());
+  }
+  // ==================== LOGINS ====================
+  async getLoginStats() {
+    const { data, error } = await this.sb.supabase
+      .from('logins')
+      .select('timestamp, users:user_id(first_name, last_name)')
+      .order('timestamp', { ascending: true });
+
+    if (error || !data) {
+      console.error('Error fetching login stats:', error);
+      return [];
+    }
+
+    return (data as unknown as LoginWithUser[]).map(log => ({
+      name: `${log.users.first_name} ${log.users.last_name}`,
+      date: new Date(log.timestamp).toISOString().split('T')[0],
+    }));
   }
   // ==================== OFFICE HOURS ====================
   async getOfficeHoursByUserId(userId: number): Promise<any> {

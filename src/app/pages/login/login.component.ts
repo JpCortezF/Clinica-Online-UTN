@@ -50,7 +50,7 @@ export class LoginComponent {
     if (this.form_login.invalid) return;
     
     const { email, password } = this.form_login.value;
-    const { error } = await this.sb.supabase.auth.signInWithPassword({email, password});
+    const { data, error } = await this.auth.login(email, password);
     
     if (error) {
       this.loginError = 'Email o contraseña incorrectos.';
