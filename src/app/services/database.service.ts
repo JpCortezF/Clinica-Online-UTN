@@ -10,6 +10,8 @@ import { CompletedAppointment } from '../interfaces/CompletedAppointment';
 import { FinalizeAppointmentData } from '../interfaces/FinalizeAppointmentData';
 import { RawSpecialist } from '../interfaces/RawSpecialist';
 import { LoginWithUser } from '../interfaces/LoginWithUser';
+import { AppointmentWithSpecialty } from '../types/AppointmentWithSpecialty';
+import { AppointmentWithSpecialist, DoctorUser } from '../types/AppointmentWithSpecialist';
 
 @Injectable({
   providedIn: 'root'
@@ -882,6 +884,93 @@ async getFullHistoryForPatient(patientId: number): Promise<CompletedAppointment[
     }));
   }
   
+  // ==================== GRAPHICS ====================
+  async getAppointmentsBySpecialty(): Promise<AppointmentWithSpecialty[]> {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select('id, specialty_id, specialties(name, img_specialty)')
+      .order('specialty_id');
+
+    if (error) {
+      console.error('Error en el gráfico de especialidades:', error);
+      return [];
+    }
+
+    return data as unknown as AppointmentWithSpecialty[];
+  }
+
+  async getAppointmentsGroupedByDay() {
+    const { data, error } = await this.sb.supabase
+      .from('appointments')
+      .select('appointment_date');
+      
+    if (error) {
+      console.error('Error al obtener turnos:', error);
+      return [];
+    }
+    
+    return data;
+  }
+
+  async getRequestedAppointmentsByDoctor(days: number | null, status: 'realizado' | null): Promise<{ name: string }[]> {
+    const from = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null;
+
+    const query = this.sb.supabase
+      .from('appointments')
+      .select('appointment_date, specialist_id');
+
+    if (from) query.gte('appointment_date', from);
+    if (status) query.eq('status', status);
+    
+    const { data: appointments, error } = await query;
+
+    const typedAppointments = appointments as AppointmentWithSpecialist[];
+
+    if (error) {
+      console.error('Error fetching appointments:', error);
+      return [];
+    }
+
+    const specialistIds = [...new Set(typedAppointments.map(a => a.specialist_id))];
+
+    const { data: specialistsData, error: specialistError } = await this.sb.supabase
+      .from('specialists')
+      .select('id, user_id')
+      .in('id', specialistIds);
+
+    if (specialistError) {
+      console.error('Error fetching specialists:', specialistError);
+      return [];
+    }
+
+    const userIds = specialistsData.map(s => s.user_id);
+
+    const { data: usersData, error: userError } = await this.sb.supabase
+      .from('users')
+      .select('id, first_name, last_name')
+      .in('id', userIds);
+
+    const typedUsers = usersData as DoctorUser[];
+
+    if (userError) {
+      console.error('Error fetching user names:', userError);
+      return [];
+    }
+
+    const userMap = new Map<number, string>();
+    typedUsers.forEach(u => {
+      userMap.set(u.id, `${u.first_name} ${u.last_name}`);
+    });
+
+    const result = typedAppointments.map(a => {
+      const specialist = specialistsData.find(s => s.id === a.specialist_id);
+      const name = specialist ? userMap.get(specialist.user_id) || 'Desconocido' : 'Desconocido';
+      return { name };
+    });
+    return result;
+  }
+
+
   // ==================== PAGE IMAGES ====================
   async getPageImages(): Promise<pageImages[]> {
     if (this.imagesCache) return this.imagesCache;

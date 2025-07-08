@@ -52,7 +52,6 @@ export class ModalViewComponent {
   constructor(private fb: FormBuilder) {}
 
   ngOnInit(): void {
-    console.log(this.content)
     if (this.showVitalSigns) {
       this.vitalForm = this.fb.group({
         height: [null, [Validators.required, Validators.min(40)]],

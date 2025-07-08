@@ -1,0 +1,15 @@
+<div class="p-6 bg-white rounded-xl shadow-md">
+  <h2 class="text-xl font-semibold mb-4 text-blue-800">Turnos por Especialidad</h2>
+  <canvas id="specialtyChart" class="mb-6"></canvas>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div *ngFor="let stat of specialtyStats"
+         class="bg-blue-50 rounded-lg p-4 flex flex-col items-center text-center shadow-md hover:shadow-lg transition-shadow">
+      <img [src]="stat.img"
+           alt="Especialidad"
+           class="w-16 h-16 object-contain mb-2" />
+      <h3 class="text-blue-900 font-semibold">{{ stat.name }}</h3>
+      <p class="text-sm text-blue-700">Turnos: {{ stat.count }}</p>
+    </div>
+  </div>
+</div>

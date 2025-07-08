@@ -7,7 +7,7 @@
       <!-- Tabs con animación facha -->
       <div class="flex flex-wrap justify-center gap-4 mb-6">
         <button *ngFor="let tab of tabs"
-                (click)="selectedTab = tab.id"
+                (click)="setTab(tab.id)"
                 [ngClass]="{
                   'bg-white text-blue-700 shadow-md scale-105': selectedTab === tab.id,
                   'bg-white/20 text-white hover:bg-white/30 hover:text-blue-100': selectedTab !== tab.id
@@ -18,12 +18,12 @@
       </div>
 
       <!-- Contenido según tab -->
-      <div [ngSwitch]="selectedTab">
+      <div [ngClass]="animationClass" [ngSwitch]="selectedTab" class="transition-container">
         <app-log-activity *ngSwitchCase="'log'"></app-log-activity>
-        <!-- <app-stats-by-specialty *ngSwitchCase="'specialty'"></app-stats-by-specialty>
+        <app-stats-by-speacialty *ngSwitchCase="'specialty'"></app-stats-by-speacialty>
         <app-stats-by-day *ngSwitchCase="'day'"></app-stats-by-day>
         <app-stats-by-doctor-requested *ngSwitchCase="'requested'"></app-stats-by-doctor-requested>
-        <app-stats-by-doctor-finalized *ngSwitchCase="'finalized'"></app-stats-by-doctor-finalized> -->
+        <app-stats-by-doctor-finalized *ngSwitchCase="'finalized'"></app-stats-by-doctor-finalized>
         <div *ngSwitchDefault class="text-white text-center">Seleccione un informe para visualizar</div>
       </div>
     </div>
