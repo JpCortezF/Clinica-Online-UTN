@@ -2,13 +2,15 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { roleGuard } from './guards/role.guard';
 import { noAuthGuard } from './guards/no-auth.guard';
+import { noAuthOrAdminGuard } from './guards/no-auth-or-admin-guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent), canActivate: [noAuthGuard] },
-  { path: 'register/:type', loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent), canActivate: [noAuthGuard] },
+  
+  { path: 'account', loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent), canActivate: [noAuthOrAdminGuard] },
+  { path: 'register/:type', loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent), canActivate: [noAuthOrAdminGuard] },
 
-  // Solo logeados:
   { path: 'user-section', loadComponent: () => import('./pages/user-section/user-section.component').then(m => m.UserSectionComponent), canActivate: [roleGuard(['admin'])] },
   { path: 'statstics', loadComponent: () => import('./pages/statstics/statstics.component').then(m => m.StatsticsComponent), canActivate: [roleGuard(['admin'])] },
   { path: 'specialist-profile', loadComponent: () => import('./pages/specialist-profile/specialist-profile.component').then(m => m.SpecialistProfileComponent), canActivate: [roleGuard(['specialist'])] },
