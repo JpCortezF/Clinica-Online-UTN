@@ -4,7 +4,7 @@
 
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
     <div *ngFor="let stat of specialtyStats"
-         class="bg-blue-50 rounded-lg p-4 flex flex-col items-center text-center shadow-md hover:shadow-lg transition-shadow">
+         class="bg-blue-50 rounded-lg p-4 flex flex-col items-center text-center shadow-md hover:shadow-lg transition-shadow mb-6">
       <img [src]="stat.img"
            alt="Especialidad"
            class="w-16 h-16 object-contain mb-2" />
@@ -12,4 +12,10 @@
       <p class="text-sm text-blue-700">Turnos: {{ stat.count }}</p>
     </div>
   </div>
+
+  <label 
+    (click)="downloadSpecialtyPDF()"
+    class="cursor-pointer text-blue-700 hover:underline absolute bottom-4 left-6">
+    ● Descargar PDF del gráfico
+  </label>
 </div>

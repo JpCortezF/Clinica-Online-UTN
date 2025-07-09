@@ -1,4 +1,10 @@
-<div class="p-6 bg-white rounded-xl shadow-md">
+<div class="p-6 bg-white rounded-xl shadow-md relative">
   <h2 class="text-xl font-semibold mb-4 text-blue-800">Turnos por Día</h2>
-  <canvas id="dayChart"></canvas>
+  <canvas class="mb-6" id="dayChart"></canvas>
+
+  <label 
+    (click)="downloadDayStatsPDF()" 
+    class="cursor-pointer text-blue-700 hover:underline absolute bottom-4 left-6">
+    ● Descargar PDF del gráfico
+  </label>
 </div>

@@ -1,9 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { Chart } from 'chart.js/auto';
 import { DatabaseService } from '../../../services/database.service';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { LogEntry } from '../../../interfaces/LogEntry';
+import jsPDF from 'jspdf';
 
 @Component({
   selector: 'app-log-activity',
@@ -14,7 +13,7 @@ import { LogEntry } from '../../../interfaces/LogEntry';
 export class LogActivityComponent {
   db = inject(DatabaseService)
   logs: LogEntry[] = [];
-
+  
   async ngAfterViewInit() {
     const logs = await this.db.getLoginStats();
     this.logs = logs; // 👈 Guardamos para luego exportar
@@ -61,21 +60,44 @@ export class LogActivityComponent {
     });
   }
 
-  downloadLogsExcel(logs: LogEntry[]) {
-    if (!logs || logs.length === 0) {
-      console.warn('No hay datos para exportar');
-      return;
-    }
+  async downloadLogsPDF() {
+    const canvas = document.getElementById('logChart') as HTMLCanvasElement;
+    if (!canvas) return;
 
-    const worksheetData = logs.map(log => ({
-      Usuario: log.name,
-      Fecha: log.date
-    }));
+    const doc = new jsPDF();
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const logo = await this.getBase64ImageFromURL('/JB_Clinica.png');
+    const chartImg = canvas.toDataURL('image/png');
 
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Logins');
+    doc.addImage(logo, 'PNG', 10, 10, 30, 30);
+    doc.setFontSize(18);
+    doc.text('Reporte de Logins al Sistema', 50, 20);
+    doc.setFontSize(12);
+    doc.text(`Fecha de emisión: ${fecha}`, 50, 28);
 
-    XLSX.writeFile(workbook, 'Clinica_Online_Logs.xlsx');
+    doc.addImage(chartImg, 'PNG', 15, 50, 180, 100);
+    doc.save('Clinica_Online_Logs.pdf');
+  }
+
+  private getBase64ImageFromURL(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/png');
+          resolve(dataURL);
+        } else {
+          reject('No se pudo obtener el contexto del canvas');
+        }
+      };
+      img.onerror = err => reject(err);
+    });
   }
 }

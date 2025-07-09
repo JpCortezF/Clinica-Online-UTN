@@ -1,4 +1,4 @@
-<div class="p-6 bg-white rounded-xl shadow-md">
+<div class="p-6 bg-white rounded-xl shadow-md relative">
   <h2 class="text-xl font-semibold mb-4 text-rose-700">Turnos Finalizados por Médico</h2>
 
   <div class="flex justify-center gap-4 mb-6">
@@ -10,5 +10,11 @@
     </label>
   </div>
 
-  <canvas id="doctorFinalizedChart"></canvas>
+  <canvas class="mb-6" id="doctorFinalizedChart"></canvas>
+
+  <label 
+    (click)="downloadFinalizedPDF()"
+    class="cursor-pointer text-blue-700 hover:underline absolute bottom-4 left-6">
+    ● Descargar PDF del gráfico
+  </label>
 </div>

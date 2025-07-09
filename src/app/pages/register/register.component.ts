@@ -7,10 +7,11 @@ import { SupabaseService } from '../../services/supabase.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { take } from 'rxjs';
+import { NgxCaptchaModule } from 'ngx-captcha';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule, NgxCaptchaModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
@@ -23,7 +24,9 @@ export class RegisterComponent {
   form_register!: FormGroup;
   profileImageFile: File | null = null;
   secondProfileImageFile: File | null = null;
-  
+  NgxCaptchaModule = '6Ld6vXwrAAAAAClvy1pKHnRRdfbt-LgG9y93AqOK';
+  captchaResponse?: string;
+
   newSpecialty = '';
   allSpecialties: { id: number, name: string }[] = [];
   selectedSpecialty = '';
@@ -126,7 +129,7 @@ export class RegisterComponent {
 
     const isFormInvalid = this.form_register.invalid;
     const isImageMissing = !this.profileImageFile || (this.userType === 'patient' && !this.secondProfileImageFile);
-    if (isFormInvalid || isImageMissing) return;
+    if (isFormInvalid || isImageMissing || !this.captchaResponse) return;
 
     let profileUrl = '';
     let secondUrl = '';

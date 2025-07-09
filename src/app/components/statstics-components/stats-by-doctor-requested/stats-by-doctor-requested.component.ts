@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { DatabaseService } from '../../../services/database.service';
 import { Chart } from 'chart.js';
 import { CommonModule } from '@angular/common';
+import jsPDF from 'jspdf';
 
 @Component({
   selector: 'app-stats-by-doctor-requested',
@@ -78,5 +79,46 @@ export class StatsByDoctorRequestedComponent {
     const g = Math.floor(Math.random() * 156 + 100);
     const b = Math.floor(Math.random() * 156 + 100);
     return `rgba(${r}, ${g}, ${b}, 0.7)`;
+  }
+
+  async downloadRequestedPDF() {
+    const canvas = document.getElementById('doctorRequestedChart') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const doc = new jsPDF();
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const imgData = canvas.toDataURL('image/png');
+    const logo = await this.getBase64ImageFromURL('/JB_Clinica.png');
+
+    doc.addImage(logo, 'PNG', 10, 10, 30, 30);
+    doc.setFontSize(18);
+    doc.text('Turnos Solicitados por Médico', 50, 20);
+    doc.setFontSize(12);
+    doc.text(`Fecha de emisión: ${fecha}`, 50, 28);
+    doc.text(`Rango seleccionado: ${this.selectedRange === 'all' ? 'Todos' : 'Últimos ' + this.selectedRange + ' días'}`, 50, 36);
+
+    doc.addImage(imgData, 'PNG', 15, 50, 180, 100);
+    doc.save('Clinica_Online_Turnos_Solicitados.pdf');
+  }
+
+  private getBase64ImageFromURL(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          reject('No context');
+        }
+      };
+      img.onerror = error => reject(error);
+    });
   }
 }

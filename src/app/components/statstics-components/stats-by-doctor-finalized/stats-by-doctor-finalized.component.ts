@@ -3,6 +3,7 @@ import { Chart } from 'chart.js';
 import { DatabaseService } from '../../../services/database.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import jsPDF from 'jspdf';
 
 @Component({
   selector: 'app-stats-by-doctor-finalized',
@@ -12,9 +13,9 @@ import { FormsModule } from '@angular/forms';
 })
 export class StatsByDoctorFinalizedComponent {
   db = inject(DatabaseService)
-selectedRange: string = '7';
+  selectedRange: string = '7';
   chart: Chart | null = null;
-
+  
   async ngAfterViewInit() {
     await this.renderChart();
   }
@@ -82,5 +83,47 @@ selectedRange: string = '7';
     const g = Math.floor(Math.random() * 156 + 100);
     const b = Math.floor(Math.random() * 156 + 100);
     return `rgba(${r}, ${g}, ${b}, 0.7)`;
+  }
+
+  async downloadFinalizedPDF() {
+    const canvas = document.getElementById('doctorFinalizedChart') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const doc = new jsPDF();
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const imgData = canvas.toDataURL('image/png');
+    const logo = await this.getBase64ImageFromURL('/JB_Clinica.png');
+
+    doc.addImage(logo, 'PNG', 10, 10, 30, 30);
+    doc.setFontSize(18);
+    doc.text('Turnos Finalizados por Médico', 50, 20);
+    doc.setFontSize(12);
+    doc.text(`Fecha de emisión: ${fecha}`, 50, 28);
+    doc.text(`Rango seleccionado: ${this.selectedRange === 'all' ? 'Todos' : 'Últimos ' + this.selectedRange + ' días'}`, 50, 36);
+
+    doc.addImage(imgData, 'PNG', 15, 50, 180, 100);
+    doc.save('Clinica_Online_Turnos_Finalizados.pdf');
+  }
+
+  getBase64ImageFromURL(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/png');
+          resolve(dataURL);
+        } else {
+          reject('No context');
+        }
+      };
+      img.onerror = error => reject(error);
+    });
   }
 }

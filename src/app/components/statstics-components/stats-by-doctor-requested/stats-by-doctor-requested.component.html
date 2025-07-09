@@ -17,5 +17,11 @@
     </label>
   </div>
 
-  <canvas id="doctorRequestedChart"></canvas>
+  <canvas class="mb-6" id="doctorRequestedChart"></canvas>
+
+  <label 
+    (click)="downloadRequestedPDF()"
+    class="cursor-pointer text-blue-700 hover:underline absolute bottom-4 left-6">
+    ● Descargar PDF del gráfico
+  </label>
 </div>
