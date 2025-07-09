@@ -18,7 +18,9 @@
         <div *ngIf="invalid('last_name')" class="text-red-800 text-sm mt-1">El apellido es requerido y solo puede contener letras.</div>
 
         <input class="input" type="number" formControlName="age" placeholder="Edad" />
-        <div *ngIf="invalid('age')" class="text-red-800 text-sm mt-1">Edad mínima: 14 años.</div>
+        <div *ngIf="invalid('age')" class="text-red-800 text-sm mt-1">
+          Edad mínima: {{ userType === 'admin' || userType === 'specialist' ? 18 : 1 }} años.
+        </div>
 
         <input class="input" type="text" formControlName="dni" placeholder="DNI" />
         <div *ngIf="invalid('dni')" class="text-red-800 text-sm mt-1">El DNI debe tener al menos 8 caracteres.</div>

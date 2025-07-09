@@ -70,10 +70,12 @@ export class RegisterComponent {
   }
 
   initForm() {
+    const ageMin = (this.userType === 'admin' || this.userType === 'specialist') ? 18 : 1;
+
     const baseFields = {
       first_name: ['', [Validators.required, Validators.pattern(/^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/)]],
       last_name: ['', [Validators.required, Validators.pattern(/^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/)]],
-      age: ['', [Validators.required, Validators.min(14)]],
+      age: ['', [Validators.required, Validators.min(ageMin)]],
       dni: ['', [Validators.required, Validators.minLength(8)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
