@@ -60,6 +60,7 @@ export class AuthService {
 
   async logout() {
     const { error } = await this.sb.supabase.auth.signOut();
+    this.setCurrentUser(null);
     return { error };
   }
 
