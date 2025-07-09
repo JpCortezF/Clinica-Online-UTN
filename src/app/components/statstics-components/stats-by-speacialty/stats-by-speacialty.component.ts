@@ -33,7 +33,7 @@ export class StatsBySpeacialtyComponent {
     });
 
     const stats = Array.from(statsMap.values());
-
+    
     const labels = stats.map(s => s.name);
     const data = stats.map(s => s.count);
     const backgroundColors = labels.map(() => this.randomColor());

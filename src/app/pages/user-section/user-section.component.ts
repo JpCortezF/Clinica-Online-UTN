@@ -19,7 +19,7 @@ export class UserSectionComponent {
   specialists: any[] = [];
   patients: any[] = [];
   admins: any[] = [];
-  selectedTab: 'todos' | 'especialistas' | 'pacientes' | 'admin' = 'especialistas';
+  selectedTab: 'todos' | 'especialistas' | 'pacientes' | 'admin' = 'todos';
   isLoading = true;
 
   showDownloadModal = false;

@@ -92,4 +92,35 @@ export class AuthService {
     const session = await this.sb.supabase.auth.getSession();
     return session.data?.session?.user?.email || null;
   }
+
+  async adminRegister(nuevoAdmin: any): Promise<string> {
+    const supabase = this.sb.sbGuest;
+    const emailLimpio = nuevoAdmin.email.trim();
+    const passwordLimpio = nuevoAdmin.password.trim();
+
+    const { data, error } = await supabase.auth.signUp({
+      email: emailLimpio,
+      password: passwordLimpio,
+    });
+
+    if (error) throw error;
+
+    const authId = data?.user?.id;
+    if (!authId) throw new Error('No se pudo obtener el auth ID del nuevo admin');
+
+    const { error: insertError } = await supabase.from('users').insert({
+      first_name: nuevoAdmin.first_name,
+      last_name: nuevoAdmin.last_name,
+      age: nuevoAdmin.age,
+      dni: nuevoAdmin.dni,
+      profile_image_url: nuevoAdmin.profile_image_url || null,
+      user_type: 'admin',
+      email: emailLimpio,
+      auth_id: authId,
+    });
+
+    if (insertError) throw insertError;
+
+    return authId;
+  }
 }

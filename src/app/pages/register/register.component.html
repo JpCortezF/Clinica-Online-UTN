@@ -31,7 +31,6 @@
       </div>
 
       <div class="flex-1 space-y-4">
-
         <div class="mb-4">
           <label class="block font-medium mb-1">Imagen de perfil</label>
           <div class="flex items-center gap-2">
@@ -40,6 +39,12 @@
             <button type="button" (click)="triggerFileInput('profile')" class="btn">Seleccionar archivo</button>
           </div>
           <div *ngIf="submitted && !profileImageFile" class="text-red-800 text-sm mt-1">Campo requerido.</div>
+          <div *ngIf="profileImageError" class="text-red-800 text-sm mt-1">
+            {{ profileImageError }}
+          </div>
+          <div class="text-gray-500 text-xs mt-1">
+            Formatos válidos: JPG, PNG, WEBP (Máx. 2MB)
+          </div>
         </div>
 
         <!-- Paciente -->
@@ -86,14 +91,13 @@
 
         <div class="mb-4">
           <ngx-recaptcha2 
-            [siteKey]="'6Ld6vXwrAAAAAClvy1pKHnRRdfbt-LgG9y93AqOK'"
+            [siteKey]="NgxCaptchaModule"
             (success)="captchaResponse = $event"
             [size]="'normal'"
             [theme]="'light'"
             [hl]="'es'">
           </ngx-recaptcha2>
           
-          <!-- Mensaje de error personalizado -->
           <div *ngIf="submitted && !captchaResponse" class="text-red-600 text-sm mt-1">
             <i class="fas fa-exclamation-circle mr-1"></i> Debes completar la verificación "No soy un robot"
           </div>

@@ -7,8 +7,16 @@ import { environment } from '../environment';
 })
 export class SupabaseService {
   supabase: SupabaseClient<any, 'public', any>;
+  sbGuest: SupabaseClient<any, 'public', any>;
 
   constructor() { 
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+    this.sbGuest = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    });
   }
+
 }

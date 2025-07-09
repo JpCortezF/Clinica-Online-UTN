@@ -1,18 +1,11 @@
 <div class="p-6 bg-white rounded-xl shadow-md">
-  <h2 class="text-xl font-semibold mb-4 text-blue-800">Turnos solicitados por médico</h2>
+  <h2 class="text-xl font-semibold mb-4 text-blue-800">Turnos solicitados por Especiaslista</h2>
 
-  <!-- Filtro de rango -->
-  <div class="flex gap-4 mb-6">
-    <label *ngFor="let option of ['7', '14', '30', 'all']" class="flex items-center gap-2">
-      <input
-        type="radio"
-        name="range"
-        [value]="option"
-        [checked]="selectedRange === option"
-        (change)="onRangeChange(option)"
-      />
-      <span>
-        {{ option === 'all' ? 'Todos' : 'Últimos ' + option + ' días' }}
+  <div class="flex justify-center gap-4 mb-6">
+    <label *ngFor="let option of ['7','14','30','all']">
+      <input type="radio" name="range" [value]="option" [checked]="selectedRange === option" (change)="onRangeChange(option)"/>
+      <span class="ml-2 text-sm text-gray-700">
+        {{ option === 'all' ? 'Mostrar Todos' : 'Últimos ' + option + ' días' }}
       </span>
     </label>
   </div>

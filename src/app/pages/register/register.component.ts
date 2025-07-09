@@ -24,6 +24,9 @@ export class RegisterComponent {
   form_register!: FormGroup;
   profileImageFile: File | null = null;
   secondProfileImageFile: File | null = null;
+  profileImageError = '';
+  secondImageError = '';
+
   NgxCaptchaModule = '6Ld6vXwrAAAAAClvy1pKHnRRdfbt-LgG9y93AqOK';
   captchaResponse?: string;
 
@@ -41,8 +44,10 @@ export class RegisterComponent {
     this.route.paramMap.subscribe(params => {
       const type = params.get('type');
       if (type === 'patient' || type === 'specialist' || type === 'admin') {
+        if(type === 'specialist'){
+          this.loadSpecialties();
+        }
         this.userType = type;
-        this.loadSpecialties();
         this.initForm();
       }
     });
@@ -79,10 +84,14 @@ export class RegisterComponent {
         ...baseFields,
         health_medical: ['', Validators.required],
       });
-    } else {
+    } else if(this.userType === 'specialist'){
       this.form_register = this.fb.group({
         ...baseFields,
         specialties: this.fb.array([], Validators.required),
+      });
+    } else {
+      this.form_register = this.fb.group({
+        ...baseFields,
       });
     }
   }
@@ -108,7 +117,7 @@ export class RegisterComponent {
     const control = this.form_register.get(controlName);
     return !!(control && control.invalid && control.touched);
   }
-
+  
   triggerFileInput(type: 'profile' | 'second') {
     if (type === 'profile') {
       this.fileInputProfile.nativeElement.click();
@@ -118,22 +127,53 @@ export class RegisterComponent {
   }
 
   handleImageUpload(event: Event, type: 'profile' | 'second') {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (type === 'profile') this.profileImageFile = file;
-    else this.secondProfileImageFile = file;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) return;
+
+    const validExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!validExtensions.includes(file.type)) {
+      const errorMsg = 'Formato no válido. Use JPG, PNG o WEBP';
+      type === 'profile' ? this.profileImageError = errorMsg : this.secondImageError = errorMsg;
+      input.value = '';
+      return;
+    }
+
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('La imagen no debe superar los 2MB');
+      input.value = '';
+      return;
+    }
+
+    console.log(`Imagen cargada (${type}):`, file);
+
+    if (type === 'profile') {
+      this.profileImageFile = file;
+    } else {
+      this.secondProfileImageFile = file;
+    }
+  }
+
+  private validarImagenes(): boolean {
+    if (this.userType === 'patient') {
+      if (this.profileImageFile && this.secondProfileImageFile) return true;
+    } else {
+      if (this.profileImageFile) return true;
+    }
+    return false;
   }
 
   async onSubmit() {
     this.submitted = true;
     this.form_register.markAllAsTouched();
-
     const isFormInvalid = this.form_register.invalid;
-    const isImageMissing = !this.profileImageFile || (this.userType === 'patient' && !this.secondProfileImageFile);
+    const isImageMissing = !this.validarImagenes();
     if (isFormInvalid || isImageMissing || !this.captchaResponse) return;
 
-    let profileUrl = '';
+    let profileUrl = '';    
     let secondUrl = '';
-
     if (this.userType === 'patient') {
       const patient = new Patient(
         this.form_register.value.first_name,
@@ -194,13 +234,9 @@ export class RegisterComponent {
         profileUrlTemp,
         'admin'
       );
-      await this.db.registerAdmin(admin);
-
-      const session = await this.sb.supabase.auth.getSession();
-      const auth_id = session.data.session?.user?.id;
+      const auth_id = await this.auth.adminRegister(admin);
       if (auth_id) {
         await this.db.updateImages(auth_id, profileUrlTemp);
-        // NO seteamos el usuario ni lo logueamos
       }
     }
 
